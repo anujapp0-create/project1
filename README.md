@@ -126,6 +126,36 @@ before filing. The "Read me" sheet in every download says what to check.
 
 ---
 
+## WhatsApp invoices, photos, and Tally export
+
+**Photos work now.** The upload accepts JPG/PNG as well as PDF, so the photos and
+screenshots clients send on WhatsApp can go straight in (save them from WhatsApp,
+then drop or pick them — on a phone you can also use the camera). An image counts
+as 1 page.
+
+**Tally import (test this before trusting it).** On the review screen there's a
+**Download Tally import (.xml)** button next to the Excel one. It produces a Tally
+XML with party/sales/GST ledgers and Sales / Credit Note / Debit Note vouchers
+(works for Tally ERP 9 and Prime). Every voucher is balanced.
+
+> The catch with Tally is **ledger names**. The file creates ledgers named
+> "Sales", "Output IGST/CGST/SGST", and one per customer. If your CA's company
+> already uses different names, Tally may create duplicates. So: import it into a
+> **test company first**, see what Tally says, and tell me what to adjust. I can't
+> run Tally here, so this is a correct starting structure, not a guaranteed
+> drop-in for every client's books. It currently does **sales** vouchers (what
+> GSTR-1 needs); purchase vouchers can be added the same way.
+
+**"Real" WhatsApp intake is a later phase.** A client texting invoices to a
+WhatsApp number and having them appear in the CA's account needs the official
+**WhatsApp Business API** through a provider (Meta direct, or a BSP like Twilio /
+Gupshup / AiSensy), plus business verification and a webhook that drops incoming
+files into the user's account. That's a separate project with its own approval
+and monthly cost — worth doing once the core tool has paying users, but not
+something that can be switched on from this code alone.
+
+---
+
 ## How the parts connect
 
 ```

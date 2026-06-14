@@ -140,7 +140,101 @@
     return sheets;
   }
 
-  var api = { classify: classify, invoiceTotals: invoiceTotals, buildSheets: buildSheets };
+  // ---------- Tally import XML (Sales / Credit Note / Debit Note vouchers) ----------
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+  }
+  function stateName(pos) { // "29-Karnataka" -> "Karnataka"
+    if (!pos) return "";
+    var p = String(pos).split("-"); return (p.length > 1 ? p.slice(1).join("-") : p[0]).trim();
+  }
+  function tallyDate(d) { // "14-05-2026" -> "20260514"
+    var m = String(d || "").match(/(\d{1,2})[-\/](\d{1,2})[-\/](\d{2,4})/);
+    if (!m) { var t = new Date(); return "" + t.getFullYear() + ("0" + (t.getMonth() + 1)).slice(-2) + ("0" + t.getDate()).slice(-2); }
+    var yy = m[3].length === 2 ? "20" + m[3] : m[3];
+    return yy + ("0" + m[2]).slice(-2) + ("0" + m[1]).slice(-2);
+  }
+  function fx(n) { return (Number(n) || 0).toFixed(2); }
+
+  function buildTallyXML(invoices) {
+    // collect unique parties for ledger masters
+    var parties = {};
+    invoices.forEach(function (inv) {
+      var name = inv.customer_name || inv.customer_gstin || "Unregistered Customer";
+      if (!parties[name]) parties[name] = { gstin: inv.customer_gstin || "", state: stateName(inv.place_of_supply) };
+    });
+
+    var out = [];
+    out.push('<?xml version="1.0" encoding="UTF-8"?>');
+    out.push("<ENVELOPE><HEADER><TALLYREQUEST>Import Data</TALLYREQUEST></HEADER><BODY><IMPORTDATA>");
+    out.push("<REQUESTDESC><REPORTNAME>All Masters</REPORTNAME></REQUESTDESC><REQUESTDATA>");
+
+    // ---- ledger masters (convenience; Tally merges by name) ----
+    Object.keys(parties).forEach(function (name) {
+      var p = parties[name];
+      var reg = p.gstin && p.gstin.length === 15 ? "Regular" : "Unregistered";
+      out.push('<TALLYMESSAGE xmlns:UDF="TallyUDF"><LEDGER NAME="' + esc(name) + '" ACTION="Create">');
+      out.push("<NAME>" + esc(name) + "</NAME><PARENT>Sundry Debtors</PARENT>");
+      out.push("<ISBILLWISEON>Yes</ISBILLWISEON><GSTREGISTRATIONTYPE>" + reg + "</GSTREGISTRATIONTYPE>");
+      if (p.gstin) out.push("<PARTYGSTIN>" + esc(p.gstin) + "</PARTYGSTIN><GSTIN>" + esc(p.gstin) + "</GSTIN>");
+      if (p.state) out.push("<LEDSTATENAME>" + esc(p.state) + "</LEDSTATENAME>");
+      out.push("</LEDGER></TALLYMESSAGE>");
+    });
+    [["Sales", "Sales Accounts", ""], ["Output IGST", "Duties & Taxes", "Integrated Tax"],
+     ["Output CGST", "Duties & Taxes", "Central Tax"], ["Output SGST", "Duties & Taxes", "State Tax"],
+     ["Output Cess", "Duties & Taxes", "Cess"]].forEach(function (l) {
+      out.push('<TALLYMESSAGE xmlns:UDF="TallyUDF"><LEDGER NAME="' + esc(l[0]) + '" ACTION="Create"><NAME>' + esc(l[0]) + "</NAME><PARENT>" + esc(l[1]) + "</PARENT>");
+      if (l[2]) out.push("<TAXTYPE>GST</TAXTYPE><GSTDUTYHEAD>" + esc(l[2]) + "</GSTDUTYHEAD>");
+      out.push("</LEDGER></TALLYMESSAGE>");
+    });
+
+    // ---- vouchers ----
+    invoices.forEach(function (inv) {
+      var t = invoiceTotals(inv);
+      var total = t.taxable + t.igst + t.cgst + t.sgst + t.cess;
+      var dt = (inv.document_type || "invoice").toLowerCase();
+      var vch = dt.indexOf("credit") >= 0 ? "Credit Note" : dt.indexOf("debit") >= 0 ? "Debit Note" : "Sales";
+      var credit = vch === "Credit Note";
+      var party = inv.customer_name || inv.customer_gstin || "Unregistered Customer";
+
+      function entry(name, amount, deemedPos) {
+        return "<ALLLEDGERENTRIES.LIST><LEDGERNAME>" + esc(name) + "</LEDGERNAME>" +
+          "<ISDEEMEDPOSITIVE>" + deemedPos + "</ISDEEMEDPOSITIVE><AMOUNT>" + fx(amount) + "</AMOUNT></ALLLEDGERENTRIES.LIST>";
+      }
+      var entries = [];
+      if (!credit) {
+        entries.push(entry(party, -total, "Yes"));
+        entries.push(entry("Sales", t.taxable, "No"));
+        if (t.igst) entries.push(entry("Output IGST", t.igst, "No"));
+        if (t.cgst) entries.push(entry("Output CGST", t.cgst, "No"));
+        if (t.sgst) entries.push(entry("Output SGST", t.sgst, "No"));
+        if (t.cess) entries.push(entry("Output Cess", t.cess, "No"));
+      } else {
+        entries.push(entry(party, total, "No"));
+        entries.push(entry("Sales", -t.taxable, "Yes"));
+        if (t.igst) entries.push(entry("Output IGST", -t.igst, "Yes"));
+        if (t.cgst) entries.push(entry("Output CGST", -t.cgst, "Yes"));
+        if (t.sgst) entries.push(entry("Output SGST", -t.sgst, "Yes"));
+        if (t.cess) entries.push(entry("Output Cess", -t.cess, "Yes"));
+      }
+
+      out.push('<TALLYMESSAGE xmlns:UDF="TallyUDF"><VOUCHER VCHTYPE="' + esc(vch) + '" ACTION="Create" OBJVIEW="Invoice Voucher View">');
+      out.push("<DATE>" + tallyDate(inv.invoice_date) + "</DATE><VOUCHERTYPENAME>" + esc(vch) + "</VOUCHERTYPENAME>");
+      out.push("<VOUCHERNUMBER>" + esc(inv.invoice_number) + "</VOUCHERNUMBER>");
+      out.push("<PARTYLEDGERNAME>" + esc(party) + "</PARTYLEDGERNAME><PARTYNAME>" + esc(party) + "</PARTYNAME>");
+      if (stateName(inv.place_of_supply)) out.push("<PLACEOFSUPPLY>" + esc(stateName(inv.place_of_supply)) + "</PLACEOFSUPPLY><STATENAME>" + esc(stateName(inv.place_of_supply)) + "</STATENAME>");
+      if (inv.customer_gstin) out.push("<PARTYGSTIN>" + esc(inv.customer_gstin) + "</PARTYGSTIN>");
+      out.push(entries.join(""));
+      out.push("</VOUCHER></TALLYMESSAGE>");
+    });
+
+    out.push("</REQUESTDATA></IMPORTDATA></BODY></ENVELOPE>");
+    return out.join("");
+  }
+
+  var api = { classify: classify, invoiceTotals: invoiceTotals, buildSheets: buildSheets, buildTallyXML: buildTallyXML };
   root.G2G = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : global);

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Account — GSTInvoice2GSTR1</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/config.js"></script>
+<style>
+  :root{--ink:#0e1729;--soft:#5a6678;--faint:#9aa3b3;--line:#e6eaf1;--mist:#f5f7fb;--indigo:#4338ca;--green:#0d9d6c}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--mist);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:0 22px}
+  a{color:inherit;text-decoration:none}
+  header.nav{border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:10}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;height:62px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px}
+  .brand .lg{width:32px;height:32px;border-radius:9px;background:linear-gradient(145deg,#5a51ec,#4035c4);display:grid;place-items:center}
+  .brand .lg svg{width:18px;height:18px}.brand b{color:var(--indigo)}
+  .navlink{font-size:13.5px;color:var(--soft);font-weight:500}
+  h1{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:26px;margin:34px 0 4px}
+  .email{font-size:14px;color:var(--soft);margin-bottom:24px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;margin-bottom:18px;box-shadow:0 6px 20px rgba(14,23,41,.04)}
+  .card h2{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;margin-bottom:14px}
+  .balrow{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .balnum{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:40px;line-height:1}
+  .balnum span{font-size:15px;font-weight:500;color:var(--soft)}
+  .btn{border:none;border-radius:11px;padding:13px 20px;font-family:'Inter',sans-serif;font-weight:600;font-size:14.5px;cursor:pointer;background:linear-gradient(180deg,#5a51ec,#4338ca);color:#fff;box-shadow:0 6px 16px rgba(67,56,202,.28);transition:.2s;display:inline-flex;align-items:center;gap:8px}
+  .btn:hover:not(:disabled){transform:translateY(-1px)}.btn:disabled{opacity:.5}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;font-family:'JetBrains Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);padding:8px 6px;border-bottom:1px solid var(--line)}
+  td{padding:10px 6px;border-bottom:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:12.5px}
+  .empty{font-size:13.5px;color:var(--faint);padding:8px 0}
+  .danger h2{color:#b04848}
+  .danger p{font-size:13px;color:var(--soft);margin-bottom:14px}
+  .btn.del{background:#fff;color:#b04848;border:1px solid #f0c9c9;box-shadow:none}
+  .btn.del:hover{background:#fdeeee}
+  .msg{font-size:13.5px;margin-top:12px}
+  .msg.err{color:#b04848}.msg.ok{color:var(--green)}
+  .signin{text-align:center;padding:60px 0}
+  .gbtn{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:13px 22px;font-size:15px;font-weight:550;cursor:pointer}
+  .gbtn svg{width:18px;height:18px}
+</style>
+</head>
+<body>
+<header class="nav"><div class="wrap nav-in">
+  <a href="/" class="brand"><span class="lg"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4.5h9l5 5V19a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M13.5 4.5V10h5" stroke="#fff" stroke-width="1.6"/><path d="M8 14.5l2 2 3.5-4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>GSTInvoice<b>2</b>GSTR1</a>
+  <a class="navlink" href="/">← Back to converter</a>
+</div></header>
+
+<div class="wrap" id="root">
+  <div class="signin" id="signin" style="display:none">
+    <p style="color:var(--soft);margin-bottom:16px">Please sign in to view your account.</p>
+    <button class="gbtn" id="signinBtn"><svg viewBox="0 0 48 48"><path fill="#4285F4" d="M45 24c0-1.6-.1-2.7-.4-3.9H24v7.1h12c-.2 1.9-1.5 4.7-4.4 6.6l-.1.3 6.4 4.9.4.1C42.6 41 45 33.3 45 24z"/><path fill="#34A853" d="M24 46c5.8 0 10.7-1.9 14.3-5.2l-6.8-5.3c-1.8 1.3-4.3 2.2-7.5 2.2-5.7 0-10.6-3.8-12.3-9.1l-.3.1-6.6 5.1-.1.3C8 41.1 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.7 28.6c-.5-1.3-.7-2.7-.7-4.1s.3-2.8.7-4.1l-.1-.3-6.7-5.2-.2.1C3.4 18 2.5 21 2.5 24.5s.9 6.5 2.5 9.4l6.7-5.3z"/><path fill="#EA4335" d="M24 11.4c4 0 6.7 1.7 8.3 3.2l6-5.9C34.7 5.3 29.8 3 24 3 15.4 3 8 7.9 5 15.1l6.7 5.3C13.4 15.1 18.3 11.4 24 11.4z"/></svg>Sign in with Google</button>
+  </div>
+
+  <div id="dash" style="display:none">
+    <h1>Your account</h1>
+    <div class="email" id="email"></div>
+
+    <div class="card">
+      <h2>Page credits</h2>
+      <div class="balrow">
+        <div class="balnum"><span id="balN">—</span> <span>pages left</span></div>
+        <button class="btn" id="buy">Buy 100 pages — ₹249</button>
+      </div>
+      <div class="msg" id="msg"></div>
+    </div>
+
+    <div class="card">
+      <h2>Purchase history</h2>
+      <table id="histTbl"><thead><tr><th>Date</th><th>Amount</th><th>Pages</th><th>Payment ID</th></tr></thead><tbody id="histBody"></tbody></table>
+      <div class="empty" id="histEmpty" style="display:none">No purchases yet.</div>
+    </div>
+
+    <div class="card danger">
+      <h2>Delete account</h2>
+      <p>Permanently deletes your login and remaining page credits. Past payment records are kept (de-identified) for accounting. This can't be undone.</p>
+      <button class="btn del" id="del">Delete my account</button>
+      <div class="msg" id="delMsg"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var sb=window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY);
+  var $=function(id){return document.getElementById(id);};
+  function signIn(){ sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:window.location.href}}); }
+  $("signinBtn").onclick=signIn;
+  async function token(){ var s=(await sb.auth.getSession()).data.session; return s?s.access_token:""; }
+  async function authFetch(u,o){ o=o||{};o.headers=o.headers||{};o.headers["Authorization"]="Bearer "+(await token());return fetch(u,o); }
+  function inr(paise){ return "₹"+((Number(paise)||0)/100).toLocaleString("en-IN"); }
+  function dt(s){ try{return new Date(s).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"});}catch(e){return s;} }
+
+  async function load(){
+    var s=(await sb.auth.getSession()).data.session;
+    if(!s){ $("signin").style.display="block"; $("dash").style.display="none"; return; }
+    $("signin").style.display="none"; $("dash").style.display="block";
+    $("email").textContent=s.user.email||"";
+    try{ var b=await (await authFetch("/api/balance")).json(); $("balN").textContent=(b.balance!=null?b.balance:"—"); }catch(e){}
+    try{
+      var h=await (await authFetch("/api/history")).json();
+      var rows=(h.history||[]);
+      if(!rows.length){ $("histEmpty").style.display="block"; }
+      else{
+        $("histBody").innerHTML=rows.map(function(p){
+          return "<tr><td>"+dt(p.created_at)+"</td><td>"+inr(p.amount)+"</td><td>"+(p.pages||"")+"</td><td>"+(p.payment_id||"")+"</td></tr>";
+        }).join("");
+      }
+    }catch(e){}
+  }
+  sb.auth.onAuthStateChange(function(){load();}); load();
+
+  $("buy").onclick=async function(){
+    var btn=this;btn.disabled=true;$("msg").className="msg";$("msg").textContent="";
+    try{
+      var od=await (await authFetch("/api/create-order",{method:"POST"})).json();
+      if(od.error) throw new Error(od.error);
+      var rzp=new Razorpay({ key:od.keyId,amount:od.amount,currency:od.currency,order_id:od.orderId,
+        name:"GSTInvoice2GSTR1",description:"100 page credits",prefill:{email:od.email},theme:{color:"#4338ca"},
+        handler:async function(resp){
+          var vj=await (await authFetch("/api/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({orderId:od.orderId,paymentId:resp.razorpay_payment_id,signature:resp.razorpay_signature})})).json();
+          if(vj.balance!=null){ $("balN").textContent=vj.balance; $("msg").className="msg ok"; $("msg").textContent="100 pages added."; load(); }
+          else{ $("msg").className="msg err"; $("msg").textContent=vj.error||"Verification failed."; }
+        }});
+      rzp.open();
+    }catch(e){ $("msg").className="msg err"; $("msg").textContent=e.message; } finally{ btn.disabled=false; }
+  };
+
+  $("del").onclick=async function(){
+    if(!confirm("Delete your account and remaining credits permanently? This cannot be undone.")) return;
+    var btn=this;btn.disabled=true;$("delMsg").className="msg";$("delMsg").textContent="Deleting…";
+    try{
+      var r=await authFetch("/api/delete-account",{method:"POST"});
+      var j=await r.json();
+      if(r.ok){ await sb.auth.signOut(); alert("Your account has been deleted."); location.href="/"; }
+      else{ $("delMsg").className="msg err"; $("delMsg").textContent=j.error||"Could not delete account."; btn.disabled=false; }
+    }catch(e){ $("delMsg").className="msg err"; $("delMsg").textContent=e.message; btn.disabled=false; }
+  };
+})();
+</script>
+</body>
+</html>

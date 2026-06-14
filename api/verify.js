@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     if (!ok) return res.status(400).json({ error: "Payment could not be verified." });
 
     // idempotency: record the payment; if it already exists, do NOT add credits again
-    const { error: dupErr } = await admin.from("payments").insert({ payment_id: paymentId, user_id: user.id });
+    const { error: dupErr } = await admin.from("payments").insert({ payment_id: paymentId, user_id: user.id, amount: 24900, pages: PAGES_PER_PURCHASE });
     if (dupErr) {
       const balance = await ensureBalance(user.id);
       return res.status(200).json({ balance, already: true });

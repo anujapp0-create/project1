@@ -11,6 +11,9 @@ create table if not exists payments (
   user_id uuid references auth.users(id) on delete set null,
   created_at timestamptz default now()
 );
+-- purchase-history columns (safe to re-run)
+alter table payments add column if not exists amount int;  -- in paise
+alter table payments add column if not exists pages  int;
 
 -- 2) Lock the tables: only the server (service role) can touch them.
 alter table credits enable row level security;
