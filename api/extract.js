@@ -58,7 +58,7 @@ export default async function handler(req, res) {
       method: "POST",
       headers: { "content-type": "application/json", "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
       body: JSON.stringify({
-        model: MODEL, max_tokens: 8000,
+        model: MODEL, max_tokens: 16000,
         messages: [{ role: "user", content: [fileBlock, { type: "text", text: PROMPT }] }],
       }),
     });
@@ -69,15 +69,20 @@ export default async function handler(req, res) {
 
     const data = await ar.json();
     let raw = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("").trim();
-    raw = raw.replace(/^```(?:json)?/m, "").replace(/```$/m, "").trim();
+    // pull out the JSON array even if the model added prose or code fences
+    const s = raw.indexOf("["), e = raw.lastIndexOf("]");
+    if (s !== -1 && e !== -1 && e > s) raw = raw.slice(s, e + 1);
     let invoices;
     try { invoices = JSON.parse(raw); } catch { invoices = []; }
     if (!Array.isArray(invoices)) invoices = [invoices];
 
-    // success -> spend the pages now
-    const remaining = await spend(user.id, pages);
-
-    return res.status(200).json({ invoices, pagesCharged: pages, remaining: remaining < 0 ? 0 : remaining });
+    // Charge ONLY when we actually got invoices back. No output => no charge.
+    let remaining = balance, charged = 0;
+    if (invoices.length > 0) {
+      remaining = await spend(user.id, pages);
+      charged = pages;
+    }
+    return res.status(200).json({ invoices, pagesCharged: charged, remaining: remaining < 0 ? 0 : remaining });
   } catch (e) {
     return res.status(500).json({ error: String(e.message || e) });
   }
