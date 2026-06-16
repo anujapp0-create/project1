@@ -8,6 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script src="/config.js"></script>
 <script src="/core.js"></script>
 <style>
@@ -18,6 +19,10 @@
   a{color:inherit;text-decoration:none}
   header.nav{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(255,255,255,.85);backdrop-filter:blur(12px);z-index:40}
   .nav-in{display:flex;align-items:center;justify-content:space-between;height:62px;gap:12px}
+  .nav-left{display:flex;align-items:center;gap:16px}
+  .acctlink{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:550;color:var(--indigo);background:#eef0ff;border:1px solid #dfe3ff;padding:7px 13px;border-radius:10px;transition:.15s}
+  .acctlink:hover{background:#e3e7ff;transform:translateY(-1px)}
+  .acctlink svg{width:15px;height:15px}
   .brand{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px}
   .brand .lg{width:32px;height:32px;border-radius:9px;background:linear-gradient(145deg,#5a51ec,#4035c4);display:grid;place-items:center}
   .brand .lg svg{width:18px;height:18px}.brand b{color:var(--indigo)}
@@ -109,10 +114,12 @@
 </head>
 <body>
 <header class="nav"><div class="wrap nav-in">
-  <a href="#" class="brand"><span class="lg"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4.5h9l5 5V19a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M13.5 4.5V10h5" stroke="#fff" stroke-width="1.6"/><path d="M8 14.5l2 2 3.5-4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>GSTInvoice<b>2</b>GSTR1</a>
+  <div class="nav-left">
+    <a href="#" class="brand"><span class="lg"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4.5h9l5 5V19a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M13.5 4.5V10h5" stroke="#fff" stroke-width="1.6"/><path d="M8 14.5l2 2 3.5-4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>GSTInvoice<b>2</b>GSTR1</a>
+    <a class="acctlink" id="navAccount" href="/dashboard.html" style="display:none"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.7"/><path d="M5 20c0-3.3 3.1-6 7-6s7 2.7 7 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Account</a>
+  </div>
   <div class="nav-right" id="navRight">
     <button class="gbtn" id="navSignIn"><svg viewBox="0 0 48 48"><path fill="#4285F4" d="M45 24c0-1.6-.1-2.7-.4-3.9H24v7.1h12c-.2 1.9-1.5 4.7-4.4 6.6l-.1.3 6.4 4.9.4.1C42.6 41 45 33.3 45 24z"/><path fill="#34A853" d="M24 46c5.8 0 10.7-1.9 14.3-5.2l-6.8-5.3c-1.8 1.3-4.3 2.2-7.5 2.2-5.7 0-10.6-3.8-12.3-9.1l-.3.1-6.6 5.1-.1.3C8 41.1 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.7 28.6c-.5-1.3-.7-2.7-.7-4.1s.3-2.8.7-4.1l-.1-.3-6.7-5.2-.2.1C3.4 18 2.5 21 2.5 24.5s.9 6.5 2.5 9.4l6.7-5.3z"/><path fill="#EA4335" d="M24 11.4c4 0 6.7 1.7 8.3 3.2l6-5.9C34.7 5.3 29.8 3 24 3 15.4 3 8 7.9 5 15.1l6.7 5.3C13.4 15.1 18.3 11.4 24 11.4z"/></svg>Sign in with Google</button>
-    <a class="navlink" id="navAccount" href="/dashboard.html" style="display:none">Account</a>
     <span class="bal" id="bal" style="display:none"></span>
     <span class="acct" id="acct" style="display:none"></span>
   </div>
@@ -120,8 +127,8 @@
 
 <section class="hero"><div class="wrap">
   <span class="pill"><span class="d"></span>Sign in with Google · 10 pages free</span>
-  <h1>Convert GST invoice PDFs into a <span class="g">GSTR-1 working</span> in minutes</h1>
-  <p class="sub">Upload your sales-invoice PDFs, review what we read, fix anything, and download a GST-ready Excel.</p>
+  <h1>Convert GST invoice PDFs &amp; images into a <span class="g">GSTR-1 working</span> in minutes</h1>
+  <p class="sub">Upload your sales-invoice PDFs or photos (incl. WhatsApp invoices), review what we read, fix anything, and download a GST-ready Excel.</p>
 
   <div class="demo"><div class="card">
     <div class="signin-gate" id="gate">
@@ -203,7 +210,7 @@
     var s=(await sb.auth.getSession()).data.session; session=s;
     if(s){
       navSignIn.style.display="none"; gate.style.display="none"; appEl.style.display="block";
-      navAccount.style.display="inline"; acct.style.display="flex";
+      navAccount.style.display="inline-flex"; acct.style.display="flex";
       acct.innerHTML='<span>'+(s.user.email||"Signed in")+'</span><span class="out" id="out">Sign out</span>';
       $("out").onclick=async function(){ await sb.auth.signOut(); location.reload(); };
       try{ var r=await authFetch("/api/balance"); var j=await r.json(); if(r.ok) setBalance(j.balance); }catch(e){}
@@ -231,25 +238,60 @@
   drop.addEventListener("drop",function(ev){add(ev.dataTransfer.files);});
   function toB64(file){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(String(r.result).split(",")[1]);};r.onerror=rej;r.readAsDataURL(file);});}
 
+  // split a PDF into <=5-page batches; returns [{b64, from, to, total}]
+  async function splitPdf(file){
+    var CHUNK=5;
+    var bytes=await file.arrayBuffer();
+    var src=await PDFLib.PDFDocument.load(bytes,{ignoreEncryption:true});
+    var n=src.getPageCount(), out=[];
+    for(var i=0;i<n;i+=CHUNK){
+      var doc=await PDFLib.PDFDocument.create();
+      var idxs=[]; for(var j=i;j<Math.min(i+CHUNK,n);j++) idxs.push(j);
+      var pages=await doc.copyPages(src,idxs);
+      pages.forEach(function(p){doc.addPage(p);});
+      out.push({b64:await doc.saveAsBase64(),from:i+1,to:Math.min(i+CHUNK,n),total:n});
+    }
+    return out;
+  }
+
+  async function sendOne(payload){
+    var r=await authFetch("/api/extract",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    var j=await r.json();
+    return {status:r.status,ok:r.ok,j:j};
+  }
+
   go.addEventListener("click",async function(){
     if(!picked.length)return; if(!session){signIn();return;}
     go.disabled=true; paywall.style.display="none"; status.className="status";
     var sp=document.createElement("span");sp.className="spin";go.insertBefore(sp,go.firstChild);
     var all=[],last=null,hitPaywall=false;
     try{
-      for(var i=0;i<picked.length;i++){
-        status.textContent="Reading "+(i+1)+" of "+picked.length+"…";
-        var b64=await toB64(picked[i]);
-        var r=await authFetch("/api/extract",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({fileBase64:b64,mimeType:picked[i].type})});
-        var j=await r.json();
-        if(r.status===401){signIn();throw new Error("__login__");}
-        if(r.status===402){setBalance(j.remaining);paywall.style.display="block";status.className="status err";status.textContent=j.error;hitPaywall=true;break;}
-        if(!r.ok) throw new Error(j.error||"Conversion failed.");
-        all=all.concat(j.invoices||[]); last=j.remaining;
+      for(var i=0;i<picked.length && !hitPaywall;i++){
+        var f=picked[i];
+        if(f.type==="application/pdf"){
+          var batches=await splitPdf(f);
+          for(var c=0;c<batches.length;c++){
+            var b=batches[c];
+            status.textContent="Reading pages "+b.from+"–"+b.to+" of "+b.total+(picked.length>1?" ("+f.name+")":"")+"…";
+            var resp=await sendOne({fileBase64:b.b64,mimeType:"application/pdf"});
+            if(resp.status===401){signIn();throw new Error("__login__");}
+            if(resp.status===402){setBalance(resp.j.remaining);paywall.style.display="block";status.className="status err";status.textContent=resp.j.error;hitPaywall=true;break;}
+            if(!resp.ok) throw new Error(resp.j.error||"Conversion failed.");
+            all=all.concat(resp.j.invoices||[]); if(resp.j.remaining!=null)last=resp.j.remaining;
+          }
+        } else {
+          status.textContent="Reading "+f.name+"…";
+          var b64=await toB64(f);
+          var resp2=await sendOne({fileBase64:b64,mimeType:f.type});
+          if(resp2.status===401){signIn();throw new Error("__login__");}
+          if(resp2.status===402){setBalance(resp2.j.remaining);paywall.style.display="block";status.className="status err";status.textContent=resp2.j.error;hitPaywall=true;break;}
+          if(!resp2.ok) throw new Error(resp2.j.error||"Conversion failed.");
+          all=all.concat(resp2.j.invoices||[]); if(resp2.j.remaining!=null)last=resp2.j.remaining;
+        }
       }
       if(last!=null) setBalance(last);
-      if(all.length){ openReview(all); status.className="status ok"; status.textContent="Read "+all.length+" invoices — review below."+(hitPaywall?" (Some files skipped — out of credits.)":""); picked=[];render(); }
-      else if(!hitPaywall) throw new Error("No invoices could be read from these PDFs.");
+      if(all.length){ openReview(all); status.className="status ok"; status.textContent="Read "+all.length+" invoices — review below."+(hitPaywall?" (Stopped early — out of credits.)":""); picked=[];render(); }
+      else if(!hitPaywall) throw new Error("No invoices could be read — nothing was charged. If these are photos, try clearer images.");
     }catch(e){ if(e.message!=="__paywall__"&&e.message!=="__login__"){status.className="status err";status.textContent=e.message;} }
     finally{ if(sp.parentNode)sp.remove(); go.disabled=picked.length===0; }
   });
