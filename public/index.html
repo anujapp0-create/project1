@@ -57,6 +57,8 @@
   .file svg{width:14px;height:14px;color:var(--indigo);flex:none}
   .file .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .file .sz{margin-left:auto;color:var(--faint);font-family:'JetBrains Mono',monospace;font-size:11px}
+  .file .rm{border:none;background:none;color:var(--faint);cursor:pointer;font-size:19px;line-height:1;padding:0 2px 0 10px;flex:none}
+  .file .rm:hover{color:#b04848}
   .btn{margin-top:18px;width:100%;border:none;border-radius:12px;padding:15px;font-family:'Inter',sans-serif;font-weight:600;font-size:15px;cursor:pointer;background:linear-gradient(180deg,#5a51ec,#4338ca);color:#fff;box-shadow:0 6px 18px rgba(67,56,202,.32);transition:.2s;display:flex;align-items:center;justify-content:center;gap:9px}
   .btn:hover:not(:disabled){transform:translateY(-1px)}.btn:disabled{opacity:.5;cursor:not-allowed}
   .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:none}
@@ -167,7 +169,6 @@
     </div>
     <div class="rev-actions">
       <button class="btn ghost" id="revReset">Start over</button>
-      <button class="btn ghost" id="revTally" style="width:auto">Download Tally import (.xml)</button>
       <button class="btn" id="revDownload" style="width:auto">Download GSTR-1 Excel</button>
     </div>
   </div>
@@ -186,7 +187,10 @@
 </div></section>
 
 <footer><div class="wrap">
-  © 2026 GSTInvoice2GSTR1 · <a href="/privacy.html">Privacy</a> · <a href="/dashboard.html">Account</a>
+  <div style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center">
+    <a href="/features.html">Features</a> · <a href="/pricing.html">Pricing</a> · <a href="/about.html">About</a> · <a href="/contact.html">Contact</a> · <a href="/faq.html">FAQ</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="/refund.html">Refund</a> · <a href="/shipping.html">Shipping</a>
+  </div>
+  © 2026 GSTInvoice2GSTR1
   <div class="disc">This tool prepares a working file from your invoices. Review the output before filing; the registered person remains responsible for the accuracy of the return.</div>
 </div></footer>
 
@@ -226,6 +230,9 @@
     filesBox.innerHTML="";
     picked.forEach(function(f){var d=document.createElement("div");d.className="file";
       d.innerHTML='<svg viewBox="0 0 24 24" fill="none"><path d="M6 3h8l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.5"/></svg><span class="nm">'+f.name+'</span><span class="sz">'+fmt(f.size)+'</span>';
+      var x=document.createElement("button");x.className="rm";x.type="button";x.title="Remove this file";x.textContent="\u00d7";
+      x.onclick=function(){var idx=picked.indexOf(f);if(idx>-1)picked.splice(idx,1);render();};
+      d.appendChild(x);
       filesBox.appendChild(d);});
     go.disabled=picked.length===0;
     goLabel.textContent=picked.length?("Convert "+picked.length+" file"+(picked.length>1?"s":"")):"Upload & convert";
@@ -256,7 +263,9 @@
 
   async function sendOne(payload){
     var r=await authFetch("/api/extract",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-    var j=await r.json();
+    var txt=await r.text(), j;
+    try{ j=JSON.parse(txt); }
+    catch(e){ j={error:(r.status>=500||r.status===504||r.status===413)?"Server error on this batch — it may have timed out. Try a smaller file.":"Unexpected server response ("+r.status+")."}; }
     return {status:r.status,ok:r.ok,j:j};
   }
 
@@ -264,35 +273,35 @@
     if(!picked.length)return; if(!session){signIn();return;}
     go.disabled=true; paywall.style.display="none"; status.className="status";
     var sp=document.createElement("span");sp.className="spin";go.insertBefore(sp,go.firstChild);
-    var all=[],last=null,hitPaywall=false;
+    var all=[],last=null,hitPaywall=false,failed=0;
     try{
-      for(var i=0;i<picked.length && !hitPaywall;i++){
-        var f=picked[i];
+      outer:
+      for(var i=0;i<picked.length;i++){
+        var f=picked[i], jobs=[];
         if(f.type==="application/pdf"){
           var batches=await splitPdf(f);
-          for(var c=0;c<batches.length;c++){
-            var b=batches[c];
-            status.textContent="Reading pages "+b.from+"–"+b.to+" of "+b.total+(picked.length>1?" ("+f.name+")":"")+"…";
-            var resp=await sendOne({fileBase64:b.b64,mimeType:"application/pdf"});
-            if(resp.status===401){signIn();throw new Error("__login__");}
-            if(resp.status===402){setBalance(resp.j.remaining);paywall.style.display="block";status.className="status err";status.textContent=resp.j.error;hitPaywall=true;break;}
-            if(!resp.ok) throw new Error(resp.j.error||"Conversion failed.");
-            all=all.concat(resp.j.invoices||[]); if(resp.j.remaining!=null)last=resp.j.remaining;
-          }
+          jobs=batches.map(function(b){return {payload:{fileBase64:b.b64,mimeType:"application/pdf"},label:"pages "+b.from+"–"+b.to+" of "+b.total+(picked.length>1?" ("+f.name+")":"")};});
         } else {
-          status.textContent="Reading "+f.name+"…";
-          var b64=await toB64(f);
-          var resp2=await sendOne({fileBase64:b64,mimeType:f.type});
-          if(resp2.status===401){signIn();throw new Error("__login__");}
-          if(resp2.status===402){setBalance(resp2.j.remaining);paywall.style.display="block";status.className="status err";status.textContent=resp2.j.error;hitPaywall=true;break;}
-          if(!resp2.ok) throw new Error(resp2.j.error||"Conversion failed.");
-          all=all.concat(resp2.j.invoices||[]); if(resp2.j.remaining!=null)last=resp2.j.remaining;
+          jobs=[{payload:{fileBase64:await toB64(f),mimeType:f.type},label:f.name}];
+        }
+        for(var c=0;c<jobs.length;c++){
+          status.textContent="Reading "+jobs[c].label+"…";
+          var resp=await sendOne(jobs[c].payload);
+          if(resp.status===401){signIn();throw new Error("__login__");}
+          if(resp.status===402){setBalance(resp.j.remaining);paywall.style.display="block";status.className="status err";status.textContent=resp.j.error;hitPaywall=true;break outer;}
+          if(!resp.ok){ failed++; continue; }
+          all=all.concat(resp.j.invoices||[]); if(resp.j.remaining!=null)last=resp.j.remaining;
         }
       }
       if(last!=null) setBalance(last);
-      if(all.length){ openReview(all); status.className="status ok"; status.textContent="Read "+all.length+" invoices — review below."+(hitPaywall?" (Stopped early — out of credits.)":""); picked=[];render(); }
-      else if(!hitPaywall) throw new Error("No invoices could be read — nothing was charged. If these are photos, try clearer images.");
-    }catch(e){ if(e.message!=="__paywall__"&&e.message!=="__login__"){status.className="status err";status.textContent=e.message;} }
+      if(all.length){
+        openReview(all); picked=[]; render();
+        status.className="status ok";
+        status.textContent="Read "+all.length+" invoices — review below."+(failed?" ("+failed+" batch"+(failed>1?"es":"")+" couldn't be read.)":"")+(hitPaywall?" (Stopped — out of credits.)":"");
+      } else if(hitPaywall){ /* paywall message already shown */ }
+      else if(failed){ status.className="status err"; status.textContent=failed+" batch"+(failed>1?"es":"")+" failed on the server (likely a timeout) — nothing was charged. Try one smaller file, and make sure the latest version is deployed."; }
+      else { status.className="status err"; status.textContent="No invoices could be read — nothing was charged. If these are photos, try clearer images."; }
+    }catch(e){ if(e.message!=="__login__"){status.className="status err";status.textContent=e.message;} }
     finally{ if(sp.parentNode)sp.remove(); go.disabled=picked.length===0; }
   });
 
@@ -363,15 +372,6 @@
     XLSX.writeFile(wb,"GSTR-1_Working.xlsx");
   });
   $("revReset").addEventListener("click",function(){ reviewData=[]; revBody.innerHTML=""; reviewSec.style.display="none"; status.textContent=""; window.scrollTo({top:0,behavior:"smooth"}); });
-
-  $("revTally").addEventListener("click",function(){
-    if(!reviewData.length)return;
-    var xml=window.G2G.buildTallyXML(reviewData);
-    var blob=new Blob([xml],{type:"application/xml"});
-    var url=URL.createObjectURL(blob); var a=document.createElement("a");
-    a.href=url; a.download="Tally_Import.xml"; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(function(){URL.revokeObjectURL(url);},1500);
-  });
 
   $("pay").addEventListener("click",async function(){
     var btn=this; btn.disabled=true;
