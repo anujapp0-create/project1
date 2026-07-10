@@ -1,0 +1,90 @@
+/* Shared styles for GSTInvoice2GSTR1 marketing & policy pages */
+:root{
+  --ink:#0e1729;--soft:#5a6678;--faint:#9aa3b3;--line:#e6eaf1;--mist:#f5f7fb;
+  --indigo:#4338ca;--green:#0d9d6c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:#fff;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--indigo);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:880px;margin:0 auto;padding:0 22px}
+.wrap-wide{max-width:1040px}
+
+/* header */
+.site-nav{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(255,255,255,.9);backdrop-filter:blur(12px);z-index:30}
+.site-nav .nav-in{display:flex;align-items:center;justify-content:space-between;height:62px;gap:14px}
+.brand{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px;color:var(--ink);text-decoration:none}
+.brand .lg{width:32px;height:32px;border-radius:9px;background:linear-gradient(145deg,#5a51ec,#4035c4);display:grid;place-items:center;flex:none}
+.brand .lg svg{width:18px;height:18px}
+.brand b{color:var(--indigo)}
+.nav-links{display:flex;align-items:center;gap:20px}
+.nav-links a{font-size:14px;color:var(--soft);text-decoration:none}
+.nav-links a:hover{color:var(--ink)}
+.nav-links a.cta{color:#fff;background:linear-gradient(180deg,#5a51ec,#4338ca);padding:8px 15px;border-radius:10px;font-weight:550}
+.nav-links a.cta:hover{text-decoration:none;transform:translateY(-1px)}
+@media(max-width:640px){.nav-links a:not(.cta){display:none}}
+
+/* page body */
+.page{padding:48px 0 64px}
+.page h1{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:clamp(26px,4vw,38px);letter-spacing:-.02em;margin-bottom:10px}
+.page .updated{font-size:13px;color:var(--faint);font-family:'JetBrains Mono',monospace;margin-bottom:28px}
+.page h2{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:19px;margin:30px 0 10px}
+.page p{margin-bottom:14px;color:#27324a}
+.page ul{margin:0 0 16px 22px}
+.page li{margin-bottom:7px;color:#27324a}
+.lead{font-size:18px;color:var(--soft);margin-bottom:26px}
+.fill{background:#fdf6e7;border:1px solid #f0e2bd;border-radius:4px;padding:1px 6px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#9a6b1f}
+.note{font-size:13.5px;color:var(--soft);background:var(--mist);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:24px}
+
+/* hero (about/features) */
+.hero{text-align:center;padding:56px 0 10px}
+.hero h1{margin-bottom:14px}
+.hero p{max-width:620px;margin:0 auto 8px;color:var(--soft);font-size:18px}
+
+/* cards / grids */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:30px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.card{border:1px solid var(--line);border-radius:14px;padding:22px;background:#fff}
+.card .ic{width:42px;height:42px;border-radius:11px;background:#eef0ff;display:grid;place-items:center;margin-bottom:14px}
+.card .ic svg{width:21px;height:21px;color:var(--indigo)}
+.card h3{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;margin-bottom:6px}
+.card p{font-size:14px;color:var(--soft);margin:0}
+
+/* contact */
+.contact-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:24px}
+@media(max-width:640px){.contact-grid{grid-template-columns:1fr}}
+.contact-item{border:1px solid var(--line);border-radius:12px;padding:18px}
+.contact-item .k{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-family:'JetBrains Mono',monospace;margin-bottom:6px}
+.contact-item .v{font-size:15px;font-weight:500}
+
+/* pricing */
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:30px}
+@media(max-width:640px){.plans{grid-template-columns:1fr}}
+.plan{border:1px solid var(--line);border-radius:16px;padding:28px}
+.plan.f{background:linear-gradient(180deg,#10183a,#0b0f1d);color:#fff;border-color:transparent}
+.plan .t{font-family:'JetBrains Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin-bottom:12px}
+.plan .amt{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;line-height:1;margin-bottom:4px}
+.plan .amt span{font-size:15px;font-weight:500;color:var(--soft)}
+.plan.f .amt span{color:#aab3cc}
+.plan ul{list-style:none;margin:16px 0 22px}
+.plan li{display:flex;gap:9px;align-items:flex-start;font-size:14px;margin-bottom:9px}
+.plan li svg{width:16px;height:16px;color:var(--green);flex:none;margin-top:3px}
+.plan.f li svg{color:#5ee0a8}
+.btn{display:inline-block;background:linear-gradient(180deg,#5a51ec,#4338ca);color:#fff;padding:12px 20px;border-radius:11px;font-weight:600;font-size:14.5px;text-decoration:none}
+.btn:hover{text-decoration:none;transform:translateY(-1px)}
+.plan.f .btn{background:#fff;color:var(--ink)}
+
+/* faq */
+.faq details{border:1px solid var(--line);border-radius:12px;margin-bottom:10px}
+.faq summary{cursor:pointer;padding:16px 18px;font-family:'Space Grotesk',sans-serif;font-weight:550;font-size:15.5px;list-style:none}
+.faq summary::-webkit-details-marker{display:none}
+.faq details[open] summary{color:var(--indigo)}
+.faq .a{padding:0 18px 16px;color:var(--soft);font-size:14.5px}
+
+/* footer */
+.site-footer{border-top:1px solid var(--line);background:var(--mist);padding:30px 0;margin-top:20px}
+.foot-links{display:flex;flex-wrap:wrap;gap:8px 18px;justify-content:center;margin-bottom:14px}
+.foot-links a{font-size:13.5px;color:var(--soft);text-decoration:none}
+.foot-links a:hover{color:var(--ink)}
+.foot-copy{text-align:center;font-size:12.5px;color:var(--faint)}
+.foot-copy .disc{max-width:620px;margin:8px auto 0;font-size:11.5px}
