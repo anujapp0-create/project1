@@ -1,63 +1,10 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Terms &amp; Conditions — GSTInvoice2GSTR1</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="/site.css"/>
-</head><body>
-<header class="site-nav"><div class="wrap wrap-wide nav-in">
-  <a class="brand" href="/"><span class="lg"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4.5h9l5 5V19a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M13.5 4.5V10h5" stroke="#fff" stroke-width="1.6"/><path d="M8 14.5l2 2 3.5-4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>GSTInvoice<b>2</b>GSTR1</a>
-  <nav class="nav-links"><a href="/features.html">Features</a><a href="/pricing.html">Pricing</a><a href="/faq.html">FAQ</a><a class="cta" href="/">Open the app →</a></nav>
-</div></header>
-
-<main class="page"><div class="wrap">
-  <h1>Terms &amp; Conditions</h1>
-  <div class="updated">Last updated: <span class="fill">[DATE]</span></div>
-
-  <p>These Terms govern your use of GSTInvoice2GSTR1 (the "Service"), operated by <span class="fill">[LEGAL ENTITY NAME]</span>. By using the Service you agree to these Terms.</p>
-
-  <h2>1. The Service</h2>
-  <p>GSTInvoice2GSTR1 reads GST sales-invoice PDFs and images and prepares a GSTR-1 working file in Excel. The Service is a productivity aid. It does <strong>not</strong> file returns and is not a substitute for professional judgement.</p>
-
-  <h2>2. Accuracy &amp; your responsibility</h2>
-  <p>Data is extracted automatically and may contain errors. You must review and verify all extracted data — especially GSTIN, place of supply, tax rate, and values — before filing. The registered person remains solely responsible for the accuracy and correctness of any return filed using the output.</p>
-
-  <h2>3. Accounts</h2>
-  <p>You sign in using Google. You are responsible for activity under your account. You must provide accurate information and use the Service only for lawful purposes.</p>
-
-  <h2>4. Page credits &amp; payment</h2>
-  <ul>
-    <li>The Service runs on prepaid <strong>page credits</strong>. New accounts receive a limited number of free pages.</li>
-    <li>Credits are sold at <span class="fill">[₹249]</span> per 100 pages. One page of any uploaded file consumes one credit.</li>
-    <li>Credits are consumed only when invoice data is successfully returned. Payments are processed via Razorpay.</li>
-    <li>See our <a href="/refund.html">Refund Policy</a> for cancellations and refunds.</li>
-  </ul>
-
-  <h2>5. Acceptable use</h2>
-  <p>You agree not to misuse the Service, attempt to bypass credit limits, upload unlawful content, or interfere with its operation.</p>
-
-  <h2>6. No warranty</h2>
-  <p>The Service is provided "as is" without warranties of any kind, including accuracy of extraction or fitness for a particular purpose, to the extent permitted by law.</p>
-
-  <h2>7. Limitation of liability</h2>
-  <p>To the maximum extent permitted by law, our total liability for any claim relating to the Service shall not exceed the amount you paid for credits in the <span class="fill">[3]</span> months preceding the claim. We are not liable for indirect or consequential losses, including any penalty, interest, or loss arising from a filed return.</p>
-
-  <h2>8. Intellectual property</h2>
-  <p>The Service, its software, and branding are owned by <span class="fill">[LEGAL ENTITY NAME]</span>. Your uploaded data and generated outputs remain yours.</p>
-
-  <h2>9. Termination</h2>
-  <p>You may stop using the Service and delete your account at any time. We may suspend access for breach of these Terms.</p>
-
-  <h2>10. Governing law</h2>
-  <p>These Terms are governed by the laws of India. Courts at <span class="fill">[CITY, e.g. Faridabad, Haryana]</span> shall have exclusive jurisdiction.</p>
-
-  <h2>11. Contact</h2>
-  <p>Questions? Email <span class="fill">[SUPPORT EMAIL]</span>.</p>
-
-  <div class="note">Template note for the operator: replace every <span class="fill">[BRACKETED]</span> field with your real details, and have this reviewed by a professional before going live.</div>
-</div></main>
-
-<footer class="site-footer"><div class="wrap wrap-wide">
-  <div class="foot-links"><a href="/">Home</a><a href="/features.html">Features</a><a href="/pricing.html">Pricing</a><a href="/about.html">About</a><a href="/contact.html">Contact</a><a href="/faq.html">FAQ</a><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="/refund.html">Refund</a><a href="/shipping.html">Shipping</a></div>
-  <div class="foot-copy">© 2026 GSTInvoice2GSTR1 · operated by <span class="fill">[LEGAL ENTITY NAME]</span></div>
-</div></footer>
-</body></html>
+{
+  "name": "gstinvoice2gstr1",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "2.45.4",
+    "pdf-lib": "1.17.1"
+  }
+}
