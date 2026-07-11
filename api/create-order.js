@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     const r = await fetch("https://api.razorpay.com/v1/orders", {
       method: "POST",
       headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: 24900, currency: "INR", notes: { user_id: user.id, product: "100 page credits" } }),
+      body: JSON.stringify({ amount: 24900, currency: "INR", notes: { user_id: user.id, pages: "100", product: "100 page credits" } }),
     });
     const order = await r.json();
     if (!r.ok) return res.status(502).json({ error: order.error?.description || "Could not create order." });
