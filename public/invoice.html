@@ -1,0 +1,333 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Invoice Maker — invoice2gst</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root{--ink:#0c1024;--soft:#5a6678;--faint:#9aa3b3;--line:#e8e7f2;--mist:#f6f5fc;--indigo:#5b4be0;--green:#0d9d6c}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:#fff;line-height:1.55}
+  a{color:var(--indigo);text-decoration:none}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px}
+  header.nav{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);z-index:20}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;height:60px;gap:12px}
+  .brand{display:flex;align-items:center;gap:9px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;color:var(--ink)}
+  .brand .lg{width:30px;height:30px;border-radius:8px;background:linear-gradient(145deg,#6d5cf0,#4e3ad1);display:grid;place-items:center;flex:none}
+  .brand .lg svg{width:17px;height:17px}
+  .brand b{color:var(--indigo)}
+  .nav a.back{font-size:13.5px;color:var(--soft)}
+  h1{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:26px;letter-spacing:-.01em;margin:28px 0 4px}
+  .sub{color:var(--soft);font-size:15px;margin-bottom:22px}
+  .beta{display:inline-block;font-size:11px;font-weight:600;color:var(--indigo);background:#eeeafb;border:1px solid #ded9f7;border-radius:20px;padding:2px 9px;vertical-align:middle;margin-left:8px}
+  .card{border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px;background:#fff}
+  .card h2{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .card h2 .tag{font-size:11px;font-weight:500;color:var(--green);background:#e7f7f0;border-radius:20px;padding:1px 8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:620px){.grid{grid-template-columns:1fr}}
+  label{display:block;font-size:12px;font-weight:600;color:var(--soft);margin-bottom:5px}
+  input,select,textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink)}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--indigo)}
+  .row{margin-bottom:12px}
+  .btn{background:linear-gradient(180deg,#6d5cf0,#5b4be0);color:#fff;border:none;padding:12px 20px;border-radius:11px;font-weight:600;font-size:14.5px;cursor:pointer;font-family:inherit}
+  .btn:hover{transform:translateY(-1px)}
+  .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .btn.sm{padding:8px 13px;font-size:13px;border-radius:9px}
+  .saved{font-size:12.5px;color:var(--green);margin-left:10px}
+  .modebar{display:inline-flex;border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-bottom:18px}
+  .modebar button{border:none;background:#fff;padding:10px 18px;font-size:14px;font-weight:550;color:var(--soft);cursor:pointer;font-family:inherit}
+  .modebar button.on{background:var(--indigo);color:#fff}
+  table.items{width:100%;border-collapse:collapse;font-size:13px}
+  table.items th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);padding:6px 6px}
+  table.items td{padding:4px 4px;vertical-align:top}
+  table.items input{padding:7px 8px;font-size:13px}
+  .items .rm{border:none;background:none;color:var(--faint);font-size:18px;cursor:pointer}
+  .items .rm:hover{color:#b04848}
+  .totbox{background:var(--mist);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-top:16px}
+  .totrow{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px}
+  .totrow.big{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;border-top:1px solid var(--line);padding-top:8px;margin-top:8px}
+  .words{font-size:13px;color:var(--soft);margin-top:8px}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0 40px}
+  .note{font-size:13px;color:var(--soft);background:var(--mist);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:18px}
+  .full-only.hide{display:none}
+  .err{color:#b04848;font-size:13px;margin-top:6px}
+  .footer{border-top:1px solid var(--line);padding:22px 0;text-align:center;font-size:12.5px;color:var(--faint)}
+</style>
+<link rel="stylesheet" href="/nav.css"></head><body>
+<header class="nav" id="nav"><div class="nav-in"><a class="brand" href="/"><span class="lg"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4.5h9l5 5V19a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M13.5 4.5V10h5" stroke="#fff" stroke-width="1.6"/><path d="M8 14.5l2 2 3.5-4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>invoice<b>2</b>gst</a><nav class="menu" id="menu"><a href="/">Home</a><a href="/ask.html">Ask AI GST</a><div class="dd" id="dd"><button class="ddbtn" id="ddbtn">GST Tools <svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="ddmenu"><a href="/invoice-generator/index.html"><span class="di"><svg viewBox="0 0 24 24" fill="none"><path d="M6 3h8l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6"/><path d="M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><span>GST Invoice Generator<small>Make a compliant invoice PDF</small></span></a><a href="/gstr1.html"><span class="di"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M4 9h16M9 9v11" stroke="currentColor" stroke-width="1.6"/></svg></span><span>GSTR-1 Converter<small>Invoices &#8594; GSTR-1 Excel / JSON</small></span></a><a class="soon"><span class="di"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h7l2 2h7" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M4 7v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9" stroke="currentColor" stroke-width="1.6"/></svg></span><span>GST Reconciliation<small>2B vs purchase register</small></span><span class="tag">Soon</span></a></div></div><a href="/contact.html">Contact</a></nav><button class="hamb" id="hamb" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div></header>
+
+<div class="wrap">
+  <h1>Invoice Maker <span class="beta">Beta</span></h1>
+  <p class="sub">Create a GST-compliant invoice PDF in seconds. Your business details are saved on this device.</p>
+
+  <div class="note">Review every invoice before sending. Businesses above the ₹5 crore e-invoicing threshold must generate an IRN + QR from the government portal for B2B — this tool makes a standard invoice, not an e-invoice.</div>
+
+  <!-- SELLER -->
+  <div class="card">
+    <h2>Your business <span class="tag" id="sellerSaved" style="display:none">Saved</span></h2>
+    <div class="row"><label>Business / legal name *</label><input id="s_name" placeholder="TaxTrack Solutions"></div>
+    <div class="grid">
+      <div class="row"><label>Your GSTIN *</label><input id="s_gstin" maxlength="15" placeholder="06AAAAA0000A1Z5" style="text-transform:uppercase"></div>
+      <div class="row"><label>State *</label><select id="s_state"></select></div>
+    </div>
+    <div class="row"><label>Address</label><textarea id="s_addr" rows="2" placeholder="Shed No. 2, Malerna Road, Ballabgarh, Faridabad, Haryana - 121004"></textarea></div>
+    <div class="grid">
+      <div class="row"><label>Email</label><input id="s_email" placeholder="office@taxtracksolutions.com"></div>
+      <div class="row"><label>Phone</label><input id="s_phone" placeholder="+91 ..."></div>
+    </div>
+    <div class="grid">
+      <div class="row"><label>Bank name & A/c (optional)</label><input id="s_bank" placeholder="IDBI Bank · A/c 0885102000018975"></div>
+      <div class="row"><label>IFSC (optional)</label><input id="s_ifsc" placeholder="IBKL0000885"></div>
+    </div>
+    <div class="grid">
+      <div class="row"><label>Invoice number prefix</label><input id="s_prefix" placeholder="INV-" value="INV-"></div>
+      <div class="row"><label>Next invoice number</label><input id="s_next" type="number" min="1" value="1"></div>
+    </div>
+    <button class="btn sm" id="saveSeller">Save business details</button>
+    <span class="saved" id="sellerMsg"></span>
+  </div>
+
+  <!-- MODE -->
+  <div class="modebar" role="tablist">
+    <button id="modeSimple" class="on">Simple invoice</button>
+    <button id="modeFull">Full tax invoice</button>
+  </div>
+
+  <!-- INVOICE -->
+  <div class="card">
+    <h2>Invoice details</h2>
+    <div class="grid">
+      <div class="row"><label>Invoice number</label><input id="i_num"></div>
+      <div class="row"><label>Invoice date</label><input id="i_date" type="date"></div>
+    </div>
+    <div class="row"><label>Client / bill-to name *</label><input id="c_name" placeholder="Client name"></div>
+    <div class="full-only hide">
+      <div class="grid">
+        <div class="row"><label>Client GSTIN (if registered)</label><input id="c_gstin" maxlength="15" placeholder="Leave blank if unregistered" style="text-transform:uppercase"></div>
+        <div class="row"><label>Place of supply (state) *</label><select id="c_pos"></select></div>
+      </div>
+      <div class="row"><label>Client address</label><textarea id="c_addr" rows="2"></textarea></div>
+    </div>
+    <div class="simple-only">
+      <div class="row"><label>Place of supply (state)</label><select id="c_pos_s"></select></div>
+    </div>
+  </div>
+
+  <!-- ITEMS -->
+  <div class="card">
+    <h2>Items</h2>
+    <!-- simple -->
+    <div class="simple-only">
+      <div class="row"><label>Description</label><input id="sm_desc" placeholder="Consulting services / goods supplied"></div>
+      <div class="grid">
+        <div class="row"><label>Taxable amount (₹) *</label><input id="sm_amt" type="number" min="0" step="0.01" placeholder="10000"></div>
+        <div class="row"><label>GST rate (%)</label><select id="sm_rate"></select></div>
+      </div>
+    </div>
+    <!-- full -->
+    <div class="full-only hide">
+      <table class="items"><thead><tr>
+        <th style="width:34%">Description</th><th>HSN/SAC</th><th>Qty</th><th>Rate ₹</th><th>GST %</th><th></th>
+      </tr></thead><tbody id="itemBody"></tbody></table>
+      <button class="btn ghost sm" id="addItem" style="margin-top:10px">+ Add item</button>
+    </div>
+
+    <div class="totbox" id="totbox"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" id="genPdf">Download invoice PDF</button>
+    <button class="btn ghost" id="resetInv">Clear invoice</button>
+    <div class="err" id="err"></div>
+  </div>
+</div>
+
+<div class="footer">© 2026 invoice2gst · Invoice Maker (Beta) — standard GST invoice, not an e-invoice/IRN</div>
+
+<script>
+  var $=function(id){return document.getElementById(id);};
+  var STATES=[["01","Jammu & Kashmir"],["02","Himachal Pradesh"],["03","Punjab"],["04","Chandigarh"],["05","Uttarakhand"],["06","Haryana"],["07","Delhi"],["08","Rajasthan"],["09","Uttar Pradesh"],["10","Bihar"],["11","Sikkim"],["12","Arunachal Pradesh"],["13","Nagaland"],["14","Manipur"],["15","Mizoram"],["16","Tripura"],["17","Meghalaya"],["18","Assam"],["19","West Bengal"],["20","Jharkhand"],["21","Odisha"],["22","Chhattisgarh"],["23","Madhya Pradesh"],["24","Gujarat"],["26","Dadra & Nagar Haveli and Daman & Diu"],["27","Maharashtra"],["29","Karnataka"],["30","Goa"],["31","Lakshadweep"],["32","Kerala"],["33","Tamil Nadu"],["34","Puducherry"],["35","Andaman & Nicobar Islands"],["36","Telangana"],["37","Andhra Pradesh"],["38","Ladakh"],["97","Other Territory"]];
+  var RATES=[0,0.1,0.25,1,1.5,3,5,6,7.5,12,18,28];
+
+  function fillStates(sel,def){ sel.innerHTML=""; STATES.forEach(function(s){ var o=document.createElement("option"); o.value=s[0]; o.textContent=s[0]+" - "+s[1]; sel.appendChild(o); }); if(def) sel.value=def; }
+  function fillRates(sel){ sel.innerHTML=""; RATES.forEach(function(r){ var o=document.createElement("option"); o.value=r; o.textContent=r+"%"; sel.appendChild(o); }); sel.value=18; }
+  ["s_state","c_pos","c_pos_s"].forEach(function(id){ fillStates($(id)); });
+  fillRates($("sm_rate"));
+
+  // ---------- number to words (INR, Indian system) ----------
+  function words(n){
+    n=Math.round(Math.abs(n)); if(n===0) return "Zero";
+    var o=["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"];
+    var t=["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
+    function two(x){ return x<20?o[x]:t[Math.floor(x/10)]+(x%10?" "+o[x%10]:""); }
+    function three(x){ var h=Math.floor(x/100), r=x%100; return (h?o[h]+" Hundred"+(r?" ":""):"")+(r?two(r):""); }
+    var out="", cr=Math.floor(n/10000000); n%=10000000; var la=Math.floor(n/100000); n%=100000; var th=Math.floor(n/1000); n%=1000;
+    if(cr) out+=two(cr)+" Crore "; if(la) out+=two(la)+" Lakh "; if(th) out+=two(th)+" Thousand "; if(n) out+=three(n);
+    return out.trim();
+  }
+  function rupeesWords(amt){ var r=Math.floor(amt), p=Math.round((amt-r)*100); var s="INR "+words(r)+" Rupee"+(r===1?"":"s"); if(p) s+=" and "+words(p)+" Paise"; return s+" Only"; }
+  function fmt(n){ return "₹"+(Number(n)||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function num(x){ var n=parseFloat(x); return isNaN(n)?0:n; }
+
+  // ---------- seller persistence ----------
+  var SKEY="i2g_seller";
+  function saveSeller(){
+    var s={name:$("s_name").value,gstin:$("s_gstin").value.toUpperCase(),state:$("s_state").value,addr:$("s_addr").value,email:$("s_email").value,phone:$("s_phone").value,bank:$("s_bank").value,ifsc:$("s_ifsc").value,prefix:$("s_prefix").value,next:$("s_next").value};
+    try{ localStorage.setItem(SKEY,JSON.stringify(s)); $("sellerMsg").textContent="Saved ✓"; $("sellerSaved").style.display="inline"; setTimeout(function(){$("sellerMsg").textContent="";},2000); }catch(e){}
+    refreshInvNum();
+  }
+  function loadSeller(){
+    try{ var s=JSON.parse(localStorage.getItem(SKEY)||"null"); if(!s) return;
+      $("s_name").value=s.name||""; $("s_gstin").value=s.gstin||""; if(s.state)$("s_state").value=s.state; $("s_addr").value=s.addr||""; $("s_email").value=s.email||""; $("s_phone").value=s.phone||""; $("s_bank").value=s.bank||""; $("s_ifsc").value=s.ifsc||""; $("s_prefix").value=s.prefix||"INV-"; $("s_next").value=s.next||1;
+      $("sellerSaved").style.display="inline";
+    }catch(e){}
+  }
+  function refreshInvNum(){ $("i_num").value=($("s_prefix").value||"")+($("s_next").value||"1"); }
+  $("saveSeller").addEventListener("click",saveSeller);
+  ["s_prefix","s_next"].forEach(function(id){ $(id).addEventListener("input",refreshInvNum); });
+
+  // ---------- mode ----------
+  var mode="simple";
+  function setMode(m){
+    mode=m;
+    $("modeSimple").classList.toggle("on",m==="simple"); $("modeFull").classList.toggle("on",m==="full");
+    document.querySelectorAll(".full-only").forEach(function(el){ el.classList.toggle("hide",m!=="full"); });
+    document.querySelectorAll(".simple-only").forEach(function(el){ el.style.display=(m==="simple")?"":"none"; });
+    recalc();
+  }
+  $("modeSimple").addEventListener("click",function(){setMode("simple");});
+  $("modeFull").addEventListener("click",function(){setMode("full");});
+
+  // ---------- full-mode items ----------
+  function addItem(desc,hsn,qty,rate,gst){
+    var tr=document.createElement("tr");
+    tr.innerHTML='<td><input class="d" placeholder="Item / service"></td><td><input class="h" placeholder="HSN"></td><td><input class="q" type="number" min="0" step="0.01" value="1"></td><td><input class="r" type="number" min="0" step="0.01" value="0"></td><td><select class="g"></select></td><td><button class="rm" title="Remove">×</button></td>';
+    $("itemBody").appendChild(tr);
+    fillRates(tr.querySelector(".g"));
+    if(desc!=null){tr.querySelector(".d").value=desc; tr.querySelector(".h").value=hsn||""; tr.querySelector(".q").value=qty; tr.querySelector(".r").value=rate; tr.querySelector(".g").value=gst;}
+    tr.querySelectorAll("input,select").forEach(function(el){ el.addEventListener("input",recalc); });
+    tr.querySelector(".rm").onclick=function(){ tr.remove(); recalc(); };
+    recalc();
+  }
+  $("addItem").addEventListener("click",function(){ addItem(); });
+
+  // ---------- totals ----------
+  function gather(){
+    var lines=[];
+    if(mode==="simple"){
+      lines.push({desc:$("sm_desc").value||"Supply of goods/services", hsn:"", qty:1, rate:num($("sm_amt").value), gst:num($("sm_rate").value), taxable:num($("sm_amt").value)});
+    } else {
+      Array.prototype.forEach.call($("itemBody").children,function(tr){
+        var q=num(tr.querySelector(".q").value), r=num(tr.querySelector(".r").value);
+        lines.push({desc:tr.querySelector(".d").value, hsn:tr.querySelector(".h").value, qty:q, rate:r, gst:num(tr.querySelector(".g").value), taxable:q*r});
+      });
+    }
+    return lines;
+  }
+  function posCode(){ return mode==="full" ? $("c_pos").value : $("c_pos_s").value; }
+  function recalc(){
+    var lines=gather();
+    var sellerState=$("s_state").value, pos=posCode();
+    var inter = sellerState && pos && sellerState!==pos;
+    var taxable=0, igst=0, cgst=0, sgst=0;
+    lines.forEach(function(l){ taxable+=l.taxable; var tax=l.taxable*l.gst/100; if(inter){igst+=tax;}else{cgst+=tax/2;sgst+=tax/2;} });
+    var total=taxable+igst+cgst+sgst;
+    var roundoff=Math.round(total)-total;
+    var grand=Math.round(total);
+    var html="";
+    html+='<div class="totrow"><span>Taxable value</span><span>'+fmt(taxable)+'</span></div>';
+    if(inter){ html+='<div class="totrow"><span>IGST</span><span>'+fmt(igst)+'</span></div>'; }
+    else { html+='<div class="totrow"><span>CGST</span><span>'+fmt(cgst)+'</span></div><div class="totrow"><span>SGST</span><span>'+fmt(sgst)+'</span></div>'; }
+    if(Math.abs(roundoff)>=0.005) html+='<div class="totrow"><span>Round off</span><span>'+(roundoff<0?"-":"")+fmt(Math.abs(roundoff))+'</span></div>';
+    html+='<div class="totrow big"><span>Total</span><span>'+fmt(grand)+'</span></div>';
+    html+='<div class="words">'+rupeesWords(grand)+'</div>';
+    html+='<div class="words">'+(inter?"Inter-state supply → IGST":"Intra-state supply → CGST + SGST")+'</div>';
+    $("totbox").innerHTML=html;
+    return {lines:lines,taxable:taxable,igst:igst,cgst:cgst,sgst:sgst,inter:inter,roundoff:roundoff,grand:grand};
+  }
+  ["sm_desc","sm_amt","sm_rate","c_pos","c_pos_s","s_state"].forEach(function(id){ $(id).addEventListener("input",recalc); });
+
+  // ---------- PDF ----------
+  function genPdf(){
+    $("err").textContent="";
+    if(!$("s_name").value || $("s_gstin").value.length!==15){ $("err").textContent="Fill your business name and 15-digit GSTIN (top card), then Save."; return; }
+    if(!$("c_name").value){ $("err").textContent="Enter the client / bill-to name."; return; }
+    var t=recalc();
+    if(!t.lines.length || t.taxable<=0){ $("err").textContent="Add at least one item with an amount."; return; }
+
+    var jsPDF=window.jspdf.jsPDF; var doc=new jsPDF({unit:"pt",format:"a4"});
+    var W=doc.internal.pageSize.getWidth(), M=40, y=48;
+    function stateName(c){ for(var i=0;i<STATES.length;i++) if(STATES[i][0]===c) return STATES[i][1]; return ""; }
+
+    doc.setFont("helvetica","bold"); doc.setFontSize(15); doc.text("TAX INVOICE", W/2, y, {align:"center"}); y+=22;
+    // seller
+    doc.setFontSize(12); doc.text($("s_name").value, M, y); y+=15;
+    doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(90);
+    ($("s_addr").value||"").split(/\n/).forEach(function(l){ if(l.trim()){ doc.text(l.trim(), M, y); y+=12; } });
+    doc.text("GSTIN: "+$("s_gstin").value.toUpperCase()+"   State: "+$("s_state").value+" - "+stateName($("s_state").value), M, y); y+=12;
+    var contact=[]; if($("s_email").value)contact.push($("s_email").value); if($("s_phone").value)contact.push($("s_phone").value);
+    if(contact.length){ doc.text(contact.join("   "), M, y); y+=12; }
+    doc.setTextColor(20);
+    // invoice meta (right)
+    doc.setFont("helvetica","normal"); doc.setFontSize(9);
+    var ry=70; doc.text("Invoice No:", W-M-150, ry); doc.setFont("helvetica","bold"); doc.text($("i_num").value||"", W-M, ry, {align:"right"});
+    doc.setFont("helvetica","normal"); ry+=13; doc.text("Date:", W-M-150, ry); doc.text(($("i_date").value||"").split("-").reverse().join("-"), W-M, ry, {align:"right"});
+
+    y+=6; doc.setDrawColor(220); doc.line(M,y,W-M,y); y+=16;
+    // bill to
+    doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.text("Bill to", M, y); y+=14;
+    doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.text($("c_name").value, M, y); y+=13;
+    doc.setFontSize(9); doc.setTextColor(90);
+    if(mode==="full"){
+      ($("c_addr").value||"").split(/\n/).forEach(function(l){ if(l.trim()){ doc.text(l.trim(), M, y); y+=12; } });
+      var cg=$("c_gstin").value.toUpperCase(); if(cg){ doc.text("GSTIN: "+cg, M, y); y+=12; }
+    }
+    doc.text("Place of supply: "+posCode()+" - "+stateName(posCode()), M, y); y+=14;
+    doc.setTextColor(20);
+
+    // items table
+    var head, body;
+    if(t.inter){
+      head=[["#","Description","HSN","Qty","Rate","Taxable","IGST %","IGST"]];
+      body=t.lines.map(function(l,i){ var tax=l.taxable*l.gst/100; return [i+1,l.desc,l.hsn||"",l.qty,l.rate.toFixed(2),l.taxable.toFixed(2),l.gst+"%",tax.toFixed(2)]; });
+    } else {
+      head=[["#","Description","HSN","Qty","Rate","Taxable","CGST","SGST"]];
+      body=t.lines.map(function(l,i){ var tax=l.taxable*l.gst/100; return [i+1,l.desc,l.hsn||"",l.qty,l.rate.toFixed(2),l.taxable.toFixed(2),(tax/2).toFixed(2),(tax/2).toFixed(2)]; });
+    }
+    doc.autoTable({ startY:y, head:head, body:body, margin:{left:M,right:M}, styles:{fontSize:8.5,cellPadding:4}, headStyles:{fillColor:[67,56,202],textColor:255,fontSize:8}, columnStyles:{0:{cellWidth:20},3:{halign:"right"},4:{halign:"right"},5:{halign:"right"},6:{halign:"right"},7:{halign:"right"}} });
+    var ty=doc.lastAutoTable.finalY+16;
+
+    // totals block (right)
+    function tline(lbl,val,bold){ doc.setFont("helvetica",bold?"bold":"normal"); doc.setFontSize(bold?11:9.5); doc.text(lbl, W-M-170, ty); doc.text(val, W-M, ty, {align:"right"}); ty+=bold?18:14; }
+    tline("Taxable value", fmt(t.taxable).replace("₹","Rs "));
+    if(t.inter) tline("IGST", fmt(t.igst).replace("₹","Rs "));
+    else { tline("CGST", fmt(t.cgst).replace("₹","Rs ")); tline("SGST", fmt(t.sgst).replace("₹","Rs ")); }
+    if(Math.abs(t.roundoff)>=0.005) tline("Round off", (t.roundoff<0?"-":"")+fmt(Math.abs(t.roundoff)).replace("₹","Rs "));
+    tline("Total", fmt(t.grand).replace("₹","Rs "), true);
+
+    // words + bank + declaration
+    var by=ty+8; doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(60);
+    doc.text("Amount in words: "+rupeesWords(t.grand), M, by, {maxWidth:W-2*M}); by+=22;
+    if($("s_bank").value || $("s_ifsc").value){ doc.text("Bank: "+$("s_bank").value+($("s_ifsc").value?"   IFSC: "+$("s_ifsc").value:""), M, by); by+=14; }
+    doc.setFontSize(8); doc.text("Declaration: We declare that this invoice shows the actual price of the goods/services described and that all particulars are true and correct.", M, by, {maxWidth:W-2*M}); by+=26;
+    doc.setTextColor(20); doc.setFont("helvetica","bold"); doc.setFontSize(9.5);
+    doc.text("For "+$("s_name").value, W-M, by, {align:"right"}); by+=34;
+    doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.text("Authorised Signatory", W-M, by, {align:"right"});
+    doc.setFontSize(8); doc.setTextColor(150); doc.text("This is a computer-generated invoice.", M, doc.internal.pageSize.getHeight()-30);
+
+    var fname=("Invoice_"+($("i_num").value||"")).replace(/[^\w\-]+/g,"_")+".pdf";
+    doc.save(fname);
+
+    // advance the invoice counter
+    var nx=parseInt($("s_next").value||"1",10)+1; $("s_next").value=nx; saveSeller(); refreshInvNum();
+  }
+  $("genPdf").addEventListener("click",genPdf);
+  $("resetInv").addEventListener("click",function(){ $("c_name").value="";$("c_gstin").value="";$("c_addr").value="";$("sm_desc").value="";$("sm_amt").value="";$("itemBody").innerHTML="";if(mode==="full")addItem();recalc(); });
+
+  // ---------- init ----------
+  loadSeller(); refreshInvNum();
+  $("i_date").value=new Date().toISOString().slice(0,10);
+  addItem(); // one full-mode row ready
+  setMode("simple");
+</script>
+<script src="/nav.js"></script></body></html>

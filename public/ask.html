@@ -1,0 +1,171 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ask GST — invoice2gst</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/config.js"></script>
+<style>
+  :root{--ink:#0c1024;--soft:#5a6678;--faint:#9aa3b3;--line:#e8e7f2;--mist:#f6f5fc;--indigo:#5b4be0;--green:#0d9d6c}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:#fff;line-height:1.6}
+  a{color:var(--indigo);text-decoration:none}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px}
+  header.nav{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);z-index:20}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;height:60px;gap:12px}
+  .brand{display:flex;align-items:center;gap:9px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;color:var(--ink)}
+  .brand .lg{width:30px;height:30px;border-radius:8px;background:linear-gradient(145deg,#6d5cf0,#4e3ad1);display:grid;place-items:center;flex:none}
+  .brand .lg svg{width:17px;height:17px}
+  .brand b{color:var(--indigo)}
+  .nav-r{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--soft)}
+  .gbtn{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 13px;font-size:13.5px;font-weight:550;cursor:pointer;font-family:inherit}
+  .gbtn svg{width:16px;height:16px}
+  .back{font-size:13px;color:var(--soft)}
+  .hero{text-align:center;padding:40px 0 8px}
+  .hero h1{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:clamp(24px,4vw,32px);letter-spacing:-.01em;margin-bottom:6px}
+  .hero p{color:var(--soft);font-size:15px}
+  .disc{max-width:560px;margin:14px auto 0;font-size:12px;color:var(--faint);background:var(--mist);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+  .askbar{display:flex;gap:8px;margin:22px 0 10px;position:sticky;top:72px;background:#fff;padding:6px 0;z-index:10}
+  .askbar textarea{flex:1;border:1px solid var(--line);border-radius:12px;padding:13px 15px;font-size:15px;font-family:inherit;resize:none;min-height:50px;max-height:160px}
+  .askbar textarea:focus{outline:none;border-color:var(--indigo)}
+  .askbar button{background:linear-gradient(180deg,#6d5cf0,#5b4be0);color:#fff;border:none;border-radius:12px;padding:0 20px;font-weight:600;font-size:15px;cursor:pointer;font-family:inherit;flex:none}
+  .askbar button:disabled{opacity:.55;cursor:default}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:8px}
+  .chip{border:1px solid var(--line);border-radius:20px;padding:7px 13px;font-size:13px;color:var(--soft);cursor:pointer;background:#fff}
+  .chip:hover{border-color:var(--indigo);color:var(--indigo)}
+  .quota{text-align:center;font-size:12px;color:var(--faint);margin-bottom:8px}
+  .thread{margin:6px 0 60px}
+  .qa{margin-bottom:24px}
+  .q{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;margin-bottom:10px;display:flex;gap:9px}
+  .q .b{color:var(--indigo);flex:none}
+  .a{font-size:15px;color:#1c2637}
+  .a p{margin:0 0 10px} .a ul{margin:0 0 10px 20px} .a li{margin-bottom:5px} .a strong{font-weight:600}
+  .a code{background:var(--mist);border-radius:4px;padding:1px 5px;font-family:'JetBrains Mono',monospace;font-size:13px}
+  .src{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+  .src .t{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin-bottom:7px;font-family:'JetBrains Mono',monospace}
+  .src a{display:block;font-size:13px;margin-bottom:5px;color:var(--indigo);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .thinking{color:var(--soft);font-size:14px;display:flex;align-items:center;gap:9px}
+  .spin{width:15px;height:15px;border:2px solid var(--line);border-top-color:var(--indigo);border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .err{color:#b04848;font-size:14px}
+  .gate{max-width:420px;margin:36px auto;text-align:center;border:1px solid var(--line);border-radius:16px;padding:30px 24px}
+  .gate p{color:var(--soft);margin-bottom:16px}
+  .footer{border-top:1px solid var(--line);padding:22px 0;text-align:center;font-size:12.5px;color:var(--faint)}
+</style>
+<link rel="stylesheet" href="/nav.css"></head><body>
+<header class="nav" id="nav"><div class="nav-in"><a class="brand" href="/"><span class="lg"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4.5h9l5 5V19a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M13.5 4.5V10h5" stroke="#fff" stroke-width="1.6"/><path d="M8 14.5l2 2 3.5-4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>invoice<b>2</b>gst</a><nav class="menu" id="menu"><a href="/">Home</a><a href="/ask.html">Ask AI GST</a><div class="dd" id="dd"><button class="ddbtn" id="ddbtn">GST Tools <svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="ddmenu"><a href="/invoice-generator/index.html"><span class="di"><svg viewBox="0 0 24 24" fill="none"><path d="M6 3h8l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6"/><path d="M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><span>GST Invoice Generator<small>Make a compliant invoice PDF</small></span></a><a href="/gstr1.html"><span class="di"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M4 9h16M9 9v11" stroke="currentColor" stroke-width="1.6"/></svg></span><span>GSTR-1 Converter<small>Invoices &#8594; GSTR-1 Excel / JSON</small></span></a><a class="soon"><span class="di"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h7l2 2h7" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M4 7v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9" stroke="currentColor" stroke-width="1.6"/></svg></span><span>GST Reconciliation<small>2B vs purchase register</small></span><span class="tag">Soon</span></a></div></div><a href="/contact.html">Contact</a><span class="authslot"><button class="gbtn" id="navSignIn" style="display:none"><svg viewBox="0 0 48 48"><path fill="#4285F4" d="M45 24c0-1.6-.1-2.7-.4-3.9H24v7.1h12c-.2 1.9-1.5 4.7-4.4 6.6l6.4 4.9C42.6 41 45 33.3 45 24z"/><path fill="#34A853" d="M24 46c5.8 0 10.7-1.9 14.3-5.2l-6.8-5.3C29.7 36.8 27 37.7 24 37.7c-5.7 0-10.6-3.8-12.3-9.1l-6.8 5.3C8 41.1 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.7 28.6C11.2 27.3 11 25.9 11 24.5s.3-2.8.7-4.1l-6.8-5.3C3.4 18 2.5 21 2.5 24.5s.9 6.5 2.5 9.4l6.7-5.3z"/><path fill="#EA4335" d="M24 11.4c3.2 0 6.1 1.1 8.3 3.2l6-5.9C34.7 5.3 29.8 3 24 3 15.4 3 8 7.9 5 15.1l6.7 5.3C13.4 15.1 18.3 11.4 24 11.4z"/></svg>Sign in</button><span class="acct" id="acct" style="display:none"></span></span></nav><button class="hamb" id="hamb" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div></header>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>Ask anything about GST</h1>
+    <p>Rates, ITC, blocked credit, returns, due dates, notifications — answered with live web search.</p>
+    <div class="disc">AI answers using live web search. This is general information, not tax/legal advice — verify against the official Act/notification before you rely on it.</div>
+  </div>
+
+  <div id="app" style="display:none">
+    <div class="askbar">
+      <textarea id="qbox" rows="1" placeholder="e.g. Is ITC available on GST paid for staff insurance?"></textarea>
+      <button id="askBtn">Ask</button>
+    </div>
+    <div class="chips" id="chips">
+      <span class="chip">What is blocked credit under Section 17(5)?</span>
+      <span class="chip">GST rate on job work for textiles</span>
+      <span class="chip">Due date for GSTR-3B this month</span>
+      <span class="chip">Is ITC available on car purchase?</span>
+    </div>
+    <div class="quota" id="quota"></div>
+    <div class="thread" id="thread"></div>
+  </div>
+
+  <div class="gate" id="gate" style="display:none">
+    <p>Sign in to ask GST questions — you get a set of free questions every day.</p>
+    <button class="gbtn" id="gateSignIn" style="margin:0 auto"><svg viewBox="0 0 48 48"><path fill="#4285F4" d="M45 24c0-1.6-.1-2.7-.4-3.9H24v7.1h12c-.2 1.9-1.5 4.7-4.4 6.6l6.4 4.9C42.6 41 45 33.3 45 24z"/><path fill="#34A853" d="M24 46c5.8 0 10.7-1.9 14.3-5.2l-6.8-5.3C29.7 36.8 27 37.7 24 37.7c-5.7 0-10.6-3.8-12.3-9.1l-6.8 5.3C8 41.1 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.7 28.6C11.2 27.3 11 25.9 11 24.5s.3-2.8.7-4.1l-6.8-5.3C3.4 18 2.5 21 2.5 24.5s.9 6.5 2.5 9.4l6.7-5.3z"/><path fill="#EA4335" d="M24 11.4c3.2 0 6.1 1.1 8.3 3.2l6-5.9C34.7 5.3 29.8 3 24 3 15.4 3 8 7.9 5 15.1l6.7 5.3C13.4 15.1 18.3 11.4 24 11.4z"/></svg>Sign in with Google</button>
+  </div>
+</div>
+
+<div class="footer">© 2026 invoice2gst · GST answers are AI-generated with web search — always verify against official sources.</div>
+
+<script>
+  var $=function(id){return document.getElementById(id);};
+  var sb=window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+  var session=null;
+
+  function signIn(){ sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:window.location.origin+"/ask.html"}}); }
+  async function token(){ var s=(await sb.auth.getSession()).data.session; return s?s.access_token:""; }
+  async function authFetch(u,o){ o=o||{};o.headers=o.headers||{};o.headers["Authorization"]="Bearer "+(await token());return fetch(u,o); }
+
+  async function refreshUI(){
+    var s=(await sb.auth.getSession()).data.session; session=s;
+    if(s){
+      $("app").style.display="block"; $("gate").style.display="none";
+      $("navSignIn").style.display="none"; $("acct").style.display="inline";
+      $("acct").innerHTML=(s.user.email||"")+' · <a href="#" id="out">Sign out</a>';
+      $("out").onclick=function(e){e.preventDefault();sb.auth.signOut().then(function(){location.reload();});};
+      if(typeof tryPending==="function") tryPending();
+    } else {
+      $("app").style.display="none"; $("gate").style.display="block";
+      $("navSignIn").style.display="inline-flex"; $("acct").style.display="none";
+    }
+  }
+  $("navSignIn").onclick=signIn; $("gateSignIn").onclick=signIn;
+  sb.auth.onAuthStateChange(function(){refreshUI();}); refreshUI();
+
+  // if arriving from the home search bar with ?q=, prefill and ask once signed in
+  var pendingQ=(new URLSearchParams(location.search)).get("q");
+  if(pendingQ){ history.replaceState(null,"",location.pathname); }
+  var didPending=false;
+  async function tryPending(){
+    if(didPending||!pendingQ) return;
+    var s=(await sb.auth.getSession()).data.session;
+    if(s){ didPending=true; $("qbox").value=pendingQ; autosize(); ask(); }
+  }
+
+  // minimal, safe markdown -> html
+  function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function md(text){
+    var lines=esc(text).split(/\n/), html="", inList=false;
+    lines.forEach(function(ln){
+      var t=ln.trim();
+      if(/^[-*]\s+/.test(t)){ if(!inList){html+="<ul>";inList=true;} html+="<li>"+inline(t.replace(/^[-*]\s+/,""))+"</li>"; }
+      else { if(inList){html+="</ul>";inList=false;} if(t) html+="<p>"+inline(t)+"</p>"; }
+    });
+    if(inList) html+="</ul>";
+    return html;
+  }
+  function inline(s){ return s.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/`(.+?)`/g,"<code>$1</code>"); }
+
+  var busy=false;
+  function autosize(){ var b=$("qbox"); b.style.height="auto"; b.style.height=Math.min(160,b.scrollHeight)+"px"; }
+  $("qbox").addEventListener("input",autosize);
+  $("qbox").addEventListener("keydown",function(e){ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();ask();} });
+  $("chips").addEventListener("click",function(e){ if(e.target.classList.contains("chip")){ $("qbox").value=e.target.textContent; autosize(); ask(); } });
+  $("askBtn").onclick=ask;
+
+  async function ask(){
+    if(busy) return;
+    var question=($("qbox").value||"").trim(); if(!question) return;
+    busy=true; $("askBtn").disabled=true;
+    var qa=document.createElement("div"); qa.className="qa";
+    qa.innerHTML='<div class="q"><span class="b">Q</span><span></span></div><div class="a"><div class="thinking"><span class="spin"></span> Searching current GST sources…</div></div>';
+    qa.querySelector(".q span:last-child").textContent=question;
+    $("thread").insertBefore(qa,$("thread").firstChild);
+    $("qbox").value=""; autosize();
+    try{
+      var r=await authFetch("/api/ask-gst",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:question})});
+      var txt=await r.text(), j; try{ j=JSON.parse(txt); }catch(e){ j={error:"Server error — try again."}; }
+      if(r.status===401){ signIn(); throw new Error("__login__"); }
+      if(!r.ok){ qa.querySelector(".a").innerHTML='<div class="err">'+esc(j.error||"Something went wrong.")+'</div>'; }
+      else{
+        var html=md(j.answer);
+        if(j.sources&&j.sources.length){
+          html+='<div class="src"><div class="t">Sources</div>';
+          j.sources.forEach(function(s){ html+='<a href="'+esc(s.url)+'" target="_blank" rel="noopener">'+esc(s.title)+'</a>'; });
+          html+='</div>';
+        }
+        qa.querySelector(".a").innerHTML=html;
+        if(j.remaining!=null) $("quota").textContent=j.remaining+" free questions left today";
+      }
+    }catch(e){ if(e.message!=="__login__") qa.querySelector(".a").innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
+    finally{ busy=false; $("askBtn").disabled=false; }
+  }
+</script>
+<script src="/nav.js"></script></body></html>

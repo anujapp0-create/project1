@@ -234,7 +234,119 @@
     return out.join("");
   }
 
-  var api = { classify: classify, invoiceTotals: invoiceTotals, buildSheets: buildSheets, buildTallyXML: buildTallyXML };
+  // ---------- GST portal GSTR-1 JSON (GSTN offline-utility schema) ----------
+  function jdate(d) { // -> "DD-MM-YYYY"
+    var s = String(d == null ? "" : d).trim();
+    var m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/);
+    if (m) { var y = m[3].length === 2 ? "20" + m[3] : m[3]; return ("0" + m[1]).slice(-2) + "-" + ("0" + m[2]).slice(-2) + "-" + y; }
+    var mon = { jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06", jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12" };
+    var m2 = s.match(/^(\d{1,2})[-\/ ]([A-Za-z]{3,})[-\/ ](\d{2,4})$/);
+    if (m2) { var mm = mon[m2[2].slice(0, 3).toLowerCase()] || "01"; var y2 = m2[3].length === 2 ? "20" + m2[3] : m2[3]; return ("0" + m2[1]).slice(-2) + "-" + mm + "-" + y2; }
+    return s;
+  }
+  function r2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+
+  function rateItems(inv) { // itms grouped by rate: [{num, itm_det:{rt,txval,iamt,camt,samt,csamt}}]
+    var g = {};
+    (inv.line_items || []).forEach(function (li) {
+      var rt = num(li.gst_rate);
+      var o = g[rt] || (g[rt] = { rt: rt, txval: 0, iamt: 0, camt: 0, samt: 0, csamt: 0 });
+      o.txval += num(li.taxable_value); o.iamt += num(li.igst); o.camt += num(li.cgst); o.samt += num(li.sgst); o.csamt += num(li.cess);
+    });
+    return Object.keys(g).map(function (k, i) {
+      var o = g[k], d = { rt: o.rt, txval: r2(o.txval) };
+      if (r2(o.iamt)) d.iamt = r2(o.iamt);
+      if (r2(o.camt)) d.camt = r2(o.camt);
+      if (r2(o.samt)) d.samt = r2(o.samt);
+      d.csamt = r2(o.csamt);
+      return { num: i + 1, itm_det: d };
+    });
+  }
+
+  function buildGstr1Json(invoices, opts) {
+    opts = opts || {};
+    var gstin = (opts.gstin || "").trim().toUpperCase();
+    var fp = opts.fp || "";
+    var supState = stateCode(gstin);
+    var out = { gstin: gstin, fp: fp, version: "GST3.2", hash: "hash" };
+
+    var b2b = {}, b2cl = {}, b2cs = {}, cdnr = {}, cdnur = [], expg = {}, hsn = {};
+    var docs = { invoice: [], debit_note: [], credit_note: [] };
+
+    invoices.forEach(function (inv) {
+      var cls = classify(inv);
+      var pos = stateCode(inv.place_of_supply) || "";
+      var idt = jdate(inv.invoice_date);
+      var inum = String(inv.invoice_number || "");
+      var val = r2(num(inv.invoice_value));
+      var dtRaw = (inv.document_type || "invoice").toLowerCase();
+      var ntty = dtRaw.indexOf("credit") >= 0 ? "C" : "D";
+      var dkey = dtRaw.indexOf("credit") >= 0 ? "credit_note" : dtRaw.indexOf("debit") >= 0 ? "debit_note" : "invoice";
+      docs[dkey].push(inum);
+
+      if (cls === "B2B") {
+        var e = b2b[inv.customer_gstin] || (b2b[inv.customer_gstin] = { ctin: inv.customer_gstin, inv: [] });
+        e.inv.push({ inum: inum, idt: idt, val: val, pos: pos, rchrg: "N", inv_typ: "R", itms: rateItems(inv) });
+      } else if (cls === "B2CL") {
+        var e2 = b2cl[pos] || (b2cl[pos] = { pos: pos, inv: [] });
+        e2.inv.push({ inum: inum, idt: idt, val: val, itms: rateItems(inv) });
+      } else if (cls === "B2CS") {
+        (inv.line_items || []).forEach(function (li) {
+          var rt = num(li.gst_rate);
+          var sply = (supState && pos && supState !== pos) ? "INTER" : "INTRA";
+          var key = sply + "|" + pos + "|" + rt;
+          var o = b2cs[key] || (b2cs[key] = { sply_ty: sply, pos: pos, typ: "OE", rt: rt, txval: 0, iamt: 0, camt: 0, samt: 0, csamt: 0 });
+          o.txval += num(li.taxable_value); o.iamt += num(li.igst); o.camt += num(li.cgst); o.samt += num(li.sgst); o.csamt += num(li.cess);
+        });
+      } else if (cls === "Exports") {
+        var etyp = invoiceTotals(inv).igst > 0 ? "WPAY" : "WOPAY";
+        var eg = expg[etyp] || (expg[etyp] = { exp_typ: etyp, inv: [] });
+        var gg = {};
+        (inv.line_items || []).forEach(function (li) { var rt = num(li.gst_rate); var o = gg[rt] || (gg[rt] = { rt: rt, txval: 0, iamt: 0, csamt: 0 }); o.txval += num(li.taxable_value); o.iamt += num(li.igst); o.csamt += num(li.cess); });
+        var eitms = Object.keys(gg).map(function (k) { var o = gg[k]; var d = { txval: r2(o.txval), rt: o.rt }; if (r2(o.iamt)) d.iamt = r2(o.iamt); d.csamt = r2(o.csamt); return d; });
+        eg.inv.push({ inum: inum, idt: idt, val: val, itms: eitms });
+      } else if (cls === "Credit Notes" || cls === "Debit Notes") {
+        if (validGstin(inv.customer_gstin)) {
+          var ce = cdnr[inv.customer_gstin] || (cdnr[inv.customer_gstin] = { ctin: inv.customer_gstin, nt: [] });
+          ce.nt.push({ ntty: ntty, nt_num: inum, nt_dt: idt, val: val, pos: pos, rchrg: "N", inv_typ: "R", itms: rateItems(inv) });
+        } else {
+          var interstate = supState && pos && supState !== pos;
+          var typ = inv.is_export ? (invoiceTotals(inv).igst > 0 ? "EXPWP" : "EXPWOP") : (interstate && val > B2CL_THRESHOLD ? "B2CL" : null);
+          if (typ) cdnur.push({ ntty: ntty, nt_num: inum, nt_dt: idt, val: val, pos: pos, typ: typ, itms: rateItems(inv) });
+          // intra-state B2C notes are netted in B2CS at the portal; omitted here.
+        }
+      }
+
+      (inv.line_items || []).forEach(function (li) {
+        var rt = num(li.gst_rate);
+        var key = (li.hsn_sac || "") + "|" + rt;
+        var o = hsn[key] || (hsn[key] = { hsn_sc: String(li.hsn_sac || ""), desc: String(li.description || ""), uqc: (li.uqc || "OTH"), qty: 0, rt: rt, txval: 0, iamt: 0, camt: 0, samt: 0, csamt: 0 });
+        o.qty += num(li.quantity); o.txval += num(li.taxable_value); o.iamt += num(li.igst); o.camt += num(li.cgst); o.samt += num(li.sgst); o.csamt += num(li.cess);
+      });
+    });
+
+    var arr;
+    arr = Object.keys(b2b).map(function (k) { return b2b[k]; }); if (arr.length) out.b2b = arr;
+    arr = Object.keys(b2cl).map(function (k) { return b2cl[k]; }); if (arr.length) out.b2cl = arr;
+    arr = Object.keys(b2cs).map(function (k) { var o = b2cs[k]; var d = { sply_ty: o.sply_ty, pos: o.pos, typ: o.typ, rt: o.rt, txval: r2(o.txval) }; if (r2(o.iamt)) d.iamt = r2(o.iamt); if (r2(o.camt)) d.camt = r2(o.camt); if (r2(o.samt)) d.samt = r2(o.samt); d.csamt = r2(o.csamt); return d; }); if (arr.length) out.b2cs = arr;
+    arr = Object.keys(cdnr).map(function (k) { return cdnr[k]; }); if (arr.length) out.cdnr = arr;
+    if (cdnur.length) out.cdnur = cdnur;
+    arr = Object.keys(expg).map(function (k) { return expg[k]; }); if (arr.length) out.exp = arr;
+    arr = Object.keys(hsn).map(function (k, i) { var o = hsn[k]; return { num: i + 1, hsn_sc: o.hsn_sc, desc: o.desc, uqc: o.uqc, qty: r2(o.qty), rt: o.rt, txval: r2(o.txval), iamt: r2(o.iamt), camt: r2(o.camt), samt: r2(o.samt), csamt: r2(o.csamt) }; }); if (arr.length) out.hsn = { data: arr };
+
+    var natMap = { invoice: 1, debit_note: 4, credit_note: 5 };
+    var docDet = [];
+    Object.keys(docs).forEach(function (dk) {
+      var a = docs[dk].filter(Boolean); if (!a.length) return;
+      var s = a.slice().sort();
+      docDet.push({ doc_num: natMap[dk], docs: [{ num: 1, from: s[0], to: s[s.length - 1], totnum: a.length, cancel: 0, net_issue: a.length }] });
+    });
+    if (docDet.length) out.doc_issue = { doc_det: docDet };
+
+    return out;
+  }
+
+  var api = { classify: classify, invoiceTotals: invoiceTotals, buildSheets: buildSheets, buildTallyXML: buildTallyXML, buildGstr1Json: buildGstr1Json, jdate: jdate };
   root.G2G = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : global);

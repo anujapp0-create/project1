@@ -1,0 +1,53 @@
+:root{
+  --ink:#0c1024;--soft:#5b6377;--faint:#98a0b3;--line:#e8e7f2;--mist:#f6f5fc;
+  --indigo:#5b4be0;--violet:#8b5cf6;--green:#0d9d6c;
+  --grad:linear-gradient(135deg,#6d5cf0,#8b5cf6);
+}
+header.nav{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(255,255,255,.93);backdrop-filter:blur(10px);z-index:50}
+.nav .nav-in{display:flex;align-items:center;justify-content:space-between;height:62px;gap:14px;max-width:1040px;margin:0 auto;padding:0 20px}
+.nav .brand{display:flex;align-items:center;gap:9px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;color:var(--ink);text-decoration:none}
+.nav .brand .lg{width:31px;height:31px;border-radius:9px;background:var(--grad);display:grid;place-items:center;flex:none;box-shadow:0 4px 12px rgba(109,92,240,.35)}
+.nav .brand .lg svg{width:17px;height:17px}
+.nav .brand b{color:var(--indigo)}
+.nav .menu{display:flex;align-items:center;gap:4px}
+.nav .menu>a,.nav .ddbtn{font-size:14px;color:var(--soft);font-weight:500;padding:8px 12px;border-radius:9px;background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:none}
+.nav .menu>a:hover,.nav .ddbtn:hover{color:var(--ink);background:var(--mist)}
+.nav .menu>a.active{color:var(--indigo)}
+.nav .dd{position:relative}
+.nav .ddbtn{display:inline-flex;align-items:center;gap:5px}
+.nav .ddbtn svg{width:12px;height:12px;transition:.15s}
+.nav .dd.open .ddbtn svg{transform:rotate(180deg)}
+.nav .ddmenu{position:absolute;top:calc(100% + 6px);left:0;min-width:236px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 34px rgba(12,16,36,.14);padding:6px;display:none}
+.nav .dd.open .ddmenu{display:block}
+.nav .ddmenu a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;font-size:14px;color:var(--ink);text-decoration:none}
+.nav .ddmenu a:hover{background:var(--mist)}
+.nav .ddmenu a.active{background:var(--mist)}
+.nav .ddmenu a .di{width:30px;height:30px;border-radius:8px;background:#eeeafb;display:grid;place-items:center;flex:none}
+.nav .ddmenu a .di svg{width:16px;height:16px;color:var(--indigo)}
+.nav .ddmenu a small{display:block;color:var(--faint);font-size:12px;font-weight:400}
+.nav .ddmenu a.soon{color:var(--faint);cursor:default}
+.nav .ddmenu a.soon .di{background:var(--mist)} .nav .ddmenu a.soon .di svg{color:var(--faint)}
+.nav .ddmenu a.soon .tag{margin-left:auto;font-size:10px;background:var(--mist);color:var(--soft);border-radius:20px;padding:2px 7px}
+.nav .authslot{display:flex;align-items:center;gap:9px;margin-left:6px}
+.nav .gbtn{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px;font-weight:550;cursor:pointer;font-family:inherit;color:var(--ink)}
+.nav .gbtn:hover{background:var(--mist)}
+.nav .gbtn svg{width:15px;height:15px}
+.nav .acctlink{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:550;color:var(--indigo);background:#eeeafb;border:1px solid #ded9f7;padding:7px 11px;border-radius:10px;text-decoration:none}
+.nav .acctlink:hover{background:#e6e0fa}
+.nav .acctlink svg{width:15px;height:15px}
+.nav .bal{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--soft);background:var(--mist);border:1px solid var(--line);border-radius:20px;padding:5px 11px}
+.nav .bal b{color:var(--indigo)}
+.nav .acct{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--soft)}
+.nav .acct .out{color:var(--indigo);cursor:pointer;font-weight:550}
+.nav .hamb{display:none;background:none;border:none;cursor:pointer;padding:6px}
+.nav .hamb svg{width:24px;height:24px;color:var(--ink);display:block}
+@media(max-width:860px){
+  .nav .hamb{display:block}
+  .nav .menu{position:absolute;top:62px;left:0;right:0;background:#fff;border-bottom:1px solid var(--line);flex-direction:column;align-items:stretch;gap:0;padding:8px;box-shadow:0 14px 28px rgba(12,16,36,.1);display:none}
+  header.nav.open .menu{display:flex}
+  .nav .menu>a,.nav .ddbtn{padding:12px 14px}
+  .nav .dd{width:100%}.nav .ddmenu{position:static;box-shadow:none;border:none;padding:0 0 0 10px;display:block}
+  .nav .dd .ddbtn svg{display:none}
+  .nav .authslot{margin:6px 0 0;padding:10px 14px 2px;border-top:1px solid var(--line);flex-wrap:wrap}
+  .nav .acct span:not(.out){display:none}
+}

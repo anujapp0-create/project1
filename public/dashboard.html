@@ -9,7 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
 <style>
-  :root{--ink:#0e1729;--soft:#5a6678;--faint:#9aa3b3;--line:#e6eaf1;--mist:#f5f7fb;--indigo:#4338ca;--green:#0d9d6c}
+  :root{--ink:#0c1024;--soft:#5a6678;--faint:#9aa3b3;--line:#e8e7f2;--mist:#f6f5fc;--indigo:#5b4be0;--green:#0d9d6c}
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--mist);line-height:1.55;-webkit-font-smoothing:antialiased}
   .wrap{max-width:760px;margin:0 auto;padding:0 22px}
@@ -17,7 +17,7 @@
   header.nav{border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:10}
   .nav-in{display:flex;align-items:center;justify-content:space-between;height:62px}
   .brand{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px}
-  .brand .lg{width:32px;height:32px;border-radius:9px;background:linear-gradient(145deg,#5a51ec,#4035c4);display:grid;place-items:center}
+  .brand .lg{width:32px;height:32px;border-radius:9px;background:linear-gradient(145deg,#6d5cf0,#4e3ad1);display:grid;place-items:center}
   .brand .lg svg{width:18px;height:18px}.brand b{color:var(--indigo)}
   .navlink{font-size:13.5px;color:var(--soft);font-weight:500}
   h1{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:26px;margin:34px 0 4px}
@@ -27,7 +27,7 @@
   .balrow{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
   .balnum{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:40px;line-height:1}
   .balnum span{font-size:15px;font-weight:500;color:var(--soft)}
-  .btn{border:none;border-radius:11px;padding:13px 20px;font-family:'Inter',sans-serif;font-weight:600;font-size:14.5px;cursor:pointer;background:linear-gradient(180deg,#5a51ec,#4338ca);color:#fff;box-shadow:0 6px 16px rgba(67,56,202,.28);transition:.2s;display:inline-flex;align-items:center;gap:8px}
+  .btn{border:none;border-radius:11px;padding:13px 20px;font-family:'Inter',sans-serif;font-weight:600;font-size:14.5px;cursor:pointer;background:linear-gradient(180deg,#6d5cf0,#5b4be0);color:#fff;box-shadow:0 6px 16px rgba(67,56,202,.28);transition:.2s;display:inline-flex;align-items:center;gap:8px}
   .btn:hover:not(:disabled){transform:translateY(-1px)}.btn:disabled{opacity:.5}
   table{width:100%;border-collapse:collapse;font-size:13.5px}
   th{text-align:left;font-family:'JetBrains Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);padding:8px 6px;border-bottom:1px solid var(--line)}
@@ -43,12 +43,9 @@
   .gbtn{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:13px 22px;font-size:15px;font-weight:550;cursor:pointer}
   .gbtn svg{width:18px;height:18px}
 </style>
-</head>
+<link rel="stylesheet" href="/nav.css"></head>
 <body>
-<header class="nav"><div class="wrap nav-in">
-  <a href="/" class="brand"><span class="lg"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4.5h9l5 5V19a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M13.5 4.5V10h5" stroke="#fff" stroke-width="1.6"/><path d="M8 14.5l2 2 3.5-4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>GSTInvoice<b>2</b>GSTR1</a>
-  <a class="navlink" href="/">← Back to converter</a>
-</div></header>
+<header class="nav" id="nav"><div class="nav-in"><a class="brand" href="/"><span class="lg"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4.5h9l5 5V19a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M13.5 4.5V10h5" stroke="#fff" stroke-width="1.6"/><path d="M8 14.5l2 2 3.5-4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>invoice<b>2</b>gst</a><nav class="menu" id="menu"><a href="/">Home</a><a href="/ask.html">Ask AI GST</a><div class="dd" id="dd"><button class="ddbtn" id="ddbtn">GST Tools <svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="ddmenu"><a href="/invoice-generator/index.html"><span class="di"><svg viewBox="0 0 24 24" fill="none"><path d="M6 3h8l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6"/><path d="M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><span>GST Invoice Generator<small>Make a compliant invoice PDF</small></span></a><a href="/gstr1.html"><span class="di"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M4 9h16M9 9v11" stroke="currentColor" stroke-width="1.6"/></svg></span><span>GSTR-1 Converter<small>Invoices &#8594; GSTR-1 Excel / JSON</small></span></a><a class="soon"><span class="di"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h7l2 2h7" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M4 7v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9" stroke="currentColor" stroke-width="1.6"/></svg></span><span>GST Reconciliation<small>2B vs purchase register</small></span><span class="tag">Soon</span></a></div></div><a href="/contact.html">Contact</a></nav><button class="hamb" id="hamb" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div></header>
 
 <div class="wrap" id="root">
   <div class="signin" id="signin" style="display:none">
@@ -120,7 +117,7 @@
       var od=await (await authFetch("/api/create-order",{method:"POST"})).json();
       if(od.error) throw new Error(od.error);
       var rzp=new Razorpay({ key:od.keyId,amount:od.amount,currency:od.currency,order_id:od.orderId,
-        name:"GSTInvoice2GSTR1",description:"100 page credits",prefill:{email:od.email},theme:{color:"#4338ca"},
+        name:"GSTInvoice2GSTR1",description:"100 page credits",prefill:{email:od.email},theme:{color:"#5b4be0"},
         handler:async function(resp){
           var vj=await (await authFetch("/api/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({orderId:od.orderId,paymentId:resp.razorpay_payment_id,signature:resp.razorpay_signature})})).json();
           if(vj.balance!=null){ $("balN").textContent=vj.balance; $("msg").className="msg ok"; $("msg").textContent="100 pages added."; load(); }
@@ -142,5 +139,5 @@
   };
 })();
 </script>
-</body>
+<script src="/nav.js"></script></body>
 </html>
