@@ -6,6 +6,9 @@
   --indigo:#5b4be0;--violet:#8b5cf6;--green:#0d9d6c;
   --grad:linear-gradient(135deg,#6d5cf0,#8b5cf6);
 }
+
+/* hide mobile tab bar on desktop */
+.ig-mob-tabs{display:none}
 /* base */
 body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:#f0eff8;line-height:1.55;margin:0;-webkit-font-smoothing:antialiased}
 a{color:var(--indigo);text-decoration:none}
@@ -179,6 +182,115 @@ footer.ig-footer{border-top:1px solid var(--line);background:#fff;padding:24px 0
 .ig-footer .cp{font-size:12px;color:var(--faint)}
 
 /* print */
+
+/* =====================================================================
+   MOBILE — comprehensive responsive rules
+   ===================================================================== */
+
+/* phone: single column, form first, preview below as a collapsible tab */
+@media(max-width:640px){
+  body{background:#f0eff8}
+  .ig-hero{padding:20px 0 14px}
+  .ig-hero h1{font-size:24px}
+  .ig-hero p{font-size:14px}
+  .ig-themes{gap:8px;margin-top:10px}
+  .theme-dot{width:22px;height:22px}
+  .ig-topbanner{font-size:12px;padding:8px 12px}
+  .ig-wrap{padding:0 12px}
+  .ig-main{gap:12px;padding:12px 0 32px}
+
+  /* form panels */
+  .ig-panel{border-radius:12px}
+  .ig-panel-head{padding:11px 14px}
+  .ig-panel-head h3{font-size:13px}
+  .ig-sec{padding:14px}
+  .ig-sec-title{font-size:10px}
+  .ig-form input,.ig-form select,.ig-form textarea{font-size:14px;padding:10px 11px}
+  .ig-row{margin-bottom:10px}
+
+  /* items: single-column cards */
+  .ig-items-wrap{overflow-x:unset}
+  .ig-items-head{display:none}
+  .ig-item-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    grid-template-areas:"desc desc" "hsn gst" "qty unit" "rate disc" "rm rm";
+    gap:7px;
+    border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;background:#fff
+  }
+  .ig-item-row .d{grid-area:desc}
+  .ig-item-row .h{grid-area:hsn}
+  .ig-item-row .g{grid-area:gst}
+  .ig-item-row .q{grid-area:qty}
+  .ig-item-row .u{grid-area:unit}
+  .ig-item-row .r{grid-area:rate}
+  .ig-item-row .di{grid-area:disc}
+  .ig-item-row .rm-btn{grid-area:rm;justify-self:end}
+  .ig-item-row input,.ig-item-row select{font-size:13px;padding:9px 9px}
+
+  /* totals */
+  .ig-totals{padding:12px}
+  .tot-row{font-size:13px}
+  .tot-row.grand{font-size:15px}
+  .tax-badge{font-size:9px}
+
+  /* action buttons: stack */
+  .ig-actions{flex-direction:column;gap:8px;padding:13px 14px}
+  .ig-btn{width:100%;justify-content:center;font-size:14px;padding:13px 16px}
+  .ig-err{text-align:center}
+
+  /* preview: full width below form */
+  .ig-preview-col{position:static}
+  .ig-preview-toolbar{flex-wrap:wrap;gap:8px;padding:9px 12px}
+  .ig-preview-toolbar span{font-size:11px}
+  .tb-btns{flex-wrap:wrap;gap:6px}
+  .tb-btn{padding:7px 10px;font-size:12px}
+
+  /* A4 preview: readable on a phone */
+  .ig-a4{padding:16px 14px;font-size:10px}
+  .ig-a4 .pv-head{flex-direction:column;gap:10px}
+  .ig-a4 .pv-meta{text-align:left}
+  .ig-a4 .pv-parties{grid-template-columns:1fr;gap:12px}
+  .ig-a4 .pv-divider{margin:10px 0}
+  .ig-a4 .pv-foot{grid-template-columns:1fr;gap:10px}
+  .ig-a4 .pv-words{max-width:100%;margin-bottom:8px}
+  .ig-a4 table.pv-sums{width:100%}
+  .ig-a4 table.pv-tbl{font-size:9.5px}
+  .ig-a4 table.pv-tbl th,.ig-a4 table.pv-tbl td{padding:5px 4px}
+  .ig-a4 .pv-sign{margin-top:16px}
+
+/* preview/form toggle tab — shown only on mobile */
+  .ig-mob-tabs{display:flex;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:62px;z-index:30;border-radius:0}
+  .ig-mob-tab{flex:1;padding:13px 0;text-align:center;font-size:14px;font-weight:600;color:var(--soft);cursor:pointer;border-bottom:2px solid transparent;transition:.15s}
+  .ig-mob-tab.on{color:var(--indigo);border-bottom-color:var(--indigo)}
+  .ig-main.show-preview #ig-form-col{display:none}
+  .ig-main.show-form #ig-prev-col{display:none}
+
+  /* upsell */
+  .ig-upsell{padding:20px 16px;border-radius:14px}
+  .ig-upsell h3{font-size:17px}
+  .ig-upsell p{font-size:13px}
+  .ig-upsell .ig-btn.upsell-cta{width:auto}
+
+  /* seo section */
+  .ig-seo-wrap{padding:18px 16px}
+  .ig-seo-wrap h2{font-size:19px}
+}
+
+/* mid range: tablet landscape — just collapse sticky */
+@media(max-width:1000px) and (min-width:641px){
+  .ig-preview-col{position:static}
+  .ig-a4 .pv-parties{grid-template-columns:1fr 1fr}
+}
+
+/* very small (≤380px) — extra tight */
+@media(max-width:380px){
+  .ig-a4{padding:12px 10px;font-size:9px}
+  .ig-a4 .pv-title-block .t1{font-size:15px}
+  .ig-hero h1{font-size:21px}
+  .ig-item-row{grid-template-areas:"desc desc" "hsn gst" "qty unit" "rate disc" "rm rm"}
+}
+
 @media print{
   header.nav,.ig-topbanner,.ig-hero,.ig-themes,.ig-form,.ig-actions,
   .ig-upsell,.ig-seo-wrap,.ig-footer,.ig-preview-toolbar,.ig-err{display:none!important}

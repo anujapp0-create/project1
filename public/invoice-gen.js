@@ -422,9 +422,15 @@
     var hero=document.querySelector(".ig-hero");
     if(hero) buildThemePicker(hero);
     // build layout inside #ig-app
-    root.innerHTML='<div class="ig-main"><div class="ig-form" id="ig-form-col"></div><div class="ig-preview-col" id="ig-prev-col"></div></div>';
+    root.innerHTML='<div class="ig-main show-form" id="ig-main"><div class="ig-form" id="ig-form-col"></div><div class="ig-preview-col" id="ig-prev-col"></div></div>';
     buildUI($("ig-form-col"));
     buildPreview($("ig-prev-col"));
+    // inject mobile tab switcher above the main columns
+    var tabBar=document.createElement("div"); tabBar.className="ig-mob-tabs"; tabBar.id="igMobTabs";
+    tabBar.innerHTML='<div class="ig-mob-tab on" id="tabForm">&#9998; Form</div><div class="ig-mob-tab" id="tabPreview">&#128065; Preview</div>';
+    root.insertBefore(tabBar,$("ig-main"));
+    $("tabForm").onclick=function(){$("ig-main").className="ig-main show-form";$("tabForm").classList.add("on");$("tabPreview").classList.remove("on");};
+    $("tabPreview").onclick=function(){$("ig-main").className="ig-main show-preview";$("tabPreview").classList.add("on");$("tabForm").classList.remove("on");recalc();window.scrollTo({top:tabBar.getBoundingClientRect().top+window.scrollY-70,behavior:"smooth"});};
     loadBiz();
     bindEvents();
     applyPreset();
